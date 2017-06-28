@@ -4,6 +4,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Emit;
 using Dapper;
 using FreshCommonUtility.Dapper;
 using FreshCommonUtility.SqlHelper;
@@ -26,22 +27,29 @@ namespace FreshCommonUtilityNetTest
             //SetupMySql();
             //RunTestMySql();
 
-            SetupSqLite();
-            RunTestsSqLite();
+            //SetupSqLite();
+            //RunTestsSqLite();
 
-            var stopwatch = Stopwatch.StartNew();
-            var pgtester = new TestClass();
-            foreach (var method in typeof(TestClass).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                var testwatch = Stopwatch.StartNew();
-                Console.Write("Running " + method.Name + " in FreshCommonUtilityNetTest:");
-                method.Invoke(pgtester, null);
-                Console.WriteLine(" - OK! {0}ms", testwatch.ElapsedMilliseconds);
-            }
-            stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
+            //var stopwatch = Stopwatch.StartNew();
+            //var pgtester = new TestClass();
+            //foreach (var method in typeof(TestClass).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            //{
+            //    var testwatch = Stopwatch.StartNew();
+            //    Console.Write("Running " + method.Name + " in FreshCommonUtilityNetTest:");
+            //    method.Invoke(pgtester, null);
+            //    Console.WriteLine(" - OK! {0}ms", testwatch.ElapsedMilliseconds);
+            //}
+            //stopwatch.Stop();
+            //Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
+            //var testClass = new TestClass();
+            //testClass.DataTableToList();
 
-            Console.Write("PostgreSQL testing complete.");
+            //AssemblyName assemblyName=new AssemblyName("EmitTest.MvcAdviceProvider");
+            //AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName,
+            //    AssemblyBuilderAccess.Run);
+            //ModuleBuilder modlBuilder = assemblyBuilder.DefineDynamicModule("MvcAdviceProvider");
+            //TypeBuilder typeBuilder = modlBuilder.DefineType("MvcAdviceProvider", TypeAttributes.Public,typeof(object),new Type[] {typeof(IAssessmentAopAdviceProvider)});
+
             Console.ReadKey();
         }
 

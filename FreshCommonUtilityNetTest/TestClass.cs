@@ -10,11 +10,11 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FreshCommonUtility.DataConvert;
 using FreshCommonUtility.Security;
+using FreshCommonUtilityNet.Npoi;
 
 namespace FreshCommonUtilityNetTest
 {
@@ -155,5 +155,99 @@ namespace FreshCommonUtilityNetTest
             resulteInfo.IsEqualTo(numberOld);
         }
         #endregion
+
+        #region [5 Test DataTable to list]
+
+        public void DataTableToList()
+        {
+            var testList = new List<TestsTabelToListObject>
+            {
+                new TestsTabelToListObject
+                {
+                    Age = 10,
+                    Height = 20.907,
+                    Name = "qinxianbo",
+                    Right = true,
+                    Sex = EnumSex.boy,
+                    YouLong = new TimeSpan(1, 1, 1, 1)
+                },
+                new TestsTabelToListObject
+                {
+                    Age =23,
+                    Height = 234.907,
+                    Name = "秦先波",
+                    Right = true,
+                    Sex = EnumSex.boy,
+                    YouLong = new TimeSpan(1, 1, 1, 2)
+                },
+                new TestsTabelToListObject
+                {
+                    Age = 40,
+                    Height = 20.907,
+                    Name = "qinxianbo",
+                    Right = true,
+                    Sex = EnumSex.boy,
+                    YouLong = new TimeSpan(1, 1, 1, 3)
+                },
+                new TestsTabelToListObject
+                {
+                    Height = 20.907,
+                    Name = "杨宏俊",
+                    Right = true,
+                    Sex = EnumSex.grily,
+                    YouLong = new TimeSpan(1, 1, 1, 4)
+                },
+                new TestsTabelToListObject
+                {
+                    Age = 10,
+                    Name = "k",
+                    Height = 20.907,
+                    Right = true,
+                    Sex = EnumSex.boy,
+                    YouLong = new TimeSpan(1, 1, 1, 5)
+                }
+            };
+            var table = DataTypeConvertHelper.ToDataTable(testList);
+            var npoi = new NpoiHelper("TestTable.xlsx");
+            npoi.DataTableToExcel(table, null, true);
+            string errorMessage;
+            var tableFile = npoi.ExcelToDataTable(0, true, out errorMessage);
+            foreach (DataRow dataRow in tableFile.Rows)
+            {
+                dataRow.ItemArray.ToList().ForEach(f =>
+                {
+                    Console.Write(f);
+                    Console.Write("  ");
+                });
+                Console.Write("\r\n");
+            }
+            var backListChange = DataTypeConvertHelper.ToList<TestsTabelToListObject>(tableFile);
+            //var backList=EntityDataHelper.ToList<TestsTabelToListObject>(tableFile);
+        }
+        #endregion
+    }
+
+    public class TestsTabelToListObject
+    {
+        /// <summary>
+        /// Name
+        /// </summary>
+        public string Name { get; set; }
+
+        public int Age { get; set; }
+
+        public double Height { get; set; }
+
+        public EnumSex Sex { get; set; }
+
+        public TimeSpan YouLong { get; set; }
+
+        public bool Right { get; set; }
+    }
+
+    public enum EnumSex
+    {
+        boy,
+        grily
     }
 }
