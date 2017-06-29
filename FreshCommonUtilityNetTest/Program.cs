@@ -41,8 +41,6 @@ namespace FreshCommonUtilityNetTest
             //}
             //stopwatch.Stop();
             //Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
-            //var testClass = new TestClass();
-            //testClass.DataTableToList();
 
             //AssemblyName assemblyName=new AssemblyName("EmitTest.MvcAdviceProvider");
             //AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName,

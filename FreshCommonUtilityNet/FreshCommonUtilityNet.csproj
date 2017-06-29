@@ -152,6 +152,7 @@
     <Compile Include="Web\FilterHTMLHelper.cs" />
     <Compile Include="Web\WebHttpHelper.cs" />
     <Compile Include="Web\WebRequestHelper.cs" />
+    <Compile Include="Zip\ZipHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

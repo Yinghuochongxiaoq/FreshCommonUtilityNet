@@ -1,10 +1,7 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,8 +10,6 @@ using System.Reflection.Emit;
 using System.Security;
 using System.Security.Permissions;
 using System.Text;
-using Common.Converters;
-using TCCruise.Base.Core;
 
 // ReSharper disable once CheckNamespace
 namespace FreshCommonUtility.DataConvert
@@ -1938,22 +1933,48 @@ namespace FreshCommonUtility.DataConvert
         }
 
         /// <summary>
-        /// DataTable 转化为对象集合
+        /// IDataReader 转化为对象集合
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="dt"></param>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="dr"></param>
         /// <returns></returns>
-        public static List<T> ToList<T>(DataTable dt) where T : new()
+        public static List<TEntity> ToList<TEntity>(IDataReader dr) where TEntity : new()
+        {
+            var listEntity = new List<TEntity>();
+            if (dr != null)
+            {
+                while (dr.Read())
+                {
+                    TEntity t = default(TEntity);
+                    t = EntityUtilCache<TEntity>.EmitInvoker(t, dr);
+                    listEntity.Add(t);
+                }
+            }
+            return listEntity;
+        }
+
+        #region [3.1.2 比较慢的方法]
+        /// <summary>
+        /// <para>表格转集合</para>
+        /// <para>DataTable中的列名称自动匹配<see cref="TResult"/>中的属性</para>
+        /// <para>当数据量大于100时，请用<see cref="ToListFast{TResult}"/></para>
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="dt"></param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-06-26</creattime>
+        /// <returns></returns>
+        private static List<TResult> ToListSlowly<TResult>(DataTable dt) where TResult : class, new()
         {
             //初始化转换对象
-            List<T> resulteList = new List<T>();
-            if (dt == null) return default(List<T>);
+            List<TResult> resulteList = new List<TResult>();
+            if (dt == null) return default(List<TResult>);
             //获取此模型的公共属性
-            PropertyInfo[] propertys = typeof(T).GetProperties();
+            PropertyInfo[] propertys = typeof(TResult).GetProperties();
             DataColumnCollection columns = dt.Columns;
             foreach (DataRow dataRow in dt.Rows)
             {
-                T t = new T();
+                TResult t = new TResult();
                 foreach (PropertyInfo p in propertys)
                 {
                     string columnName = p.Name;
@@ -2004,27 +2025,68 @@ namespace FreshCommonUtility.DataConvert
             }
             return resulteList;
         }
+        #endregion
+
+        #region [3.1.3 比较快的方法]
+        /// <summary>
+        /// <para>表格转集合</para>
+        /// <para>DataTable中的列名称自动匹配<see cref="TResult"/>中的属性</para>
+        /// <para>当数据量小于100是，请用<see cref="ToListSlowly{TResult}"/></para>
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="table"></param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-06-26</creattime>
+        /// <returns></returns>
+        private static List<TResult> ToListFast<TResult>(DataTable table) where TResult : class, new()
+        {
+            List<TResult> list = new List<TResult>();
+            if (table == null || table.Rows.Count < 1) return list;
+            DataTable dt = DataTableCreator<TResult>.GetDataTable();
+            var oldColums = table.Columns;
+            var newColums = dt.Columns;
+            DataTableEntityBuilder<TResult> eblist = null;
+            //行计数器
+            long rowNum = 0;
+            foreach (DataRow dataRow in table.Rows)
+            {
+                var dtRow = dt.NewRow();
+                var flag = false;
+                foreach (DataColumn dataColumn in oldColums.Cast<DataColumn>().Where(dataColumn => newColums.Contains(dataColumn.ColumnName)))
+                {
+                    flag = true;
+                    dtRow[dataColumn.ColumnName] = dataRow[dataColumn.ColumnName];
+                }
+                if (flag && rowNum == 0)
+                {
+                    eblist = DataTableEntityBuilder<TResult>.CreateBuilder(dtRow);
+                }
+                if (!flag) continue;
+                rowNum++;
+                // ReSharper disable once PossibleNullReferenceException
+                TResult tempInfo = eblist.Build(dtRow);
+                list.Add(tempInfo);
+            }
+            dt.Dispose();
+            return list;
+        }
 
         /// <summary>
-        /// IDataReader 转化为对象集合
+        /// <para>表格转集合</para>
         /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <param name="dr"></param>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="table"></param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-06-29</creattime>
         /// <returns></returns>
-        public static List<TEntity> ToList<TEntity>(IDataReader dr) where TEntity : new()
+        public static List<TResult> ToList<TResult>(DataTable table) where TResult : class, new()
         {
-            var listEntity = new List<TEntity>();
-            if (dr != null)
-            {
-                while (dr.Read())
-                {
-                    TEntity t = default(TEntity);
-                    t = EntityUtilCache<TEntity>.EmitInvoker(t, dr);
-                    listEntity.Add(t);
-                }
-            }
-            return listEntity;
+            //初始化转换对象
+            List<TResult> list = new List<TResult>();
+            if (table == null || table.Rows.Count < 1) return list;
+            return table.Rows.Count > 100 ? ToListFast<TResult>(table) : ToListSlowly<TResult>(table);
         }
+        #endregion
         #endregion
 
         #region [3.2 dt to dynamic]
@@ -2088,7 +2150,7 @@ namespace FreshCommonUtility.DataConvert
         {
             if (source != null)
             {
-                return FastMapper<TTarget, TSource>.mapReturnMethod(source);
+                return FastMapper<TTarget, TSource>.MapReturnMethod(source);
             }
 
             return default(TTarget);
@@ -2105,7 +2167,7 @@ namespace FreshCommonUtility.DataConvert
         {
             if (source != null && target != null)
             {
-                FastMapper<TTarget, TSource>.mapMethod(target, source);
+                FastMapper<TTarget, TSource>.MapMethod(target, source);
             }
         }
         #endregion
@@ -2129,8 +2191,61 @@ namespace FreshCommonUtility.DataConvert
         #endregion
 
         #region [3.5 IEnumerable to dataTable]
+        #region [3.5.1 比较慢的方法]
         /// <summary>
-        /// Creates a DataTable from an IEnumerable
+        /// <para>集合转化为表格</para>
+        /// <para>T中应该只包含值类型，对应的DataTable自动匹配列名相同的属性</para>
+        /// <para>当数据量大于100时，请用<see cref="ToDataTable{TSource}"/></para>
+        /// </summary>
+        /// <typeparam name="T">类型中不应该包含有引用类型</typeparam>
+        /// <param name="entityList">转换的集合</param> 
+        /// <author>FreshMan</author>
+        /// <creattime>2017-06-26</creattime>
+        /// <returns></returns>
+        public static DataTable ToDataTableSlowly<T>(IList<T> entityList)
+        {
+            if (entityList == null) return null;
+            var dt = CreateTable<T>();
+            Type entityType = typeof(T);
+            var properties = entityType.GetProperties();
+            foreach (T item in entityList)
+            {
+                DataRow row = dt.NewRow();
+                foreach (var property in properties)
+                {
+                    if (!property.CanRead || (!property.PropertyType.IsValueType && property.PropertyType != typeof(string))) continue;
+                    row[property.Name] = property.GetValue(item, null);
+                }
+                dt.Rows.Add(row);
+            }
+            return dt;
+        }
+
+        /// <summary>
+        /// <para>创建表格</para>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableName"></param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-06-26</creattime>
+        /// <returns></returns>
+        private static DataTable CreateTable<T>(string tableName = null)
+        {
+            Type entityType = typeof(T);
+            PropertyDescriptorCollection propertyies = TypeDescriptor.GetProperties(entityType);
+            DataTable dt = new DataTable(tableName);
+            foreach (PropertyDescriptor prop in propertyies)
+            {
+                dt.Columns.Add(prop.Name);
+            }
+            return dt;
+        }
+        #endregion
+
+        #region [3.5.2 比较快的方法]
+        /// <summary>
+        /// <para>Creates a DataTable from an IEnumerable</para>
+        /// <para>当数据量小于100时，请用<see cref="ToDataTableSlowly{TSource}"/></para>
         /// </summary>
         /// <typeparam name="TSource">The Generic type of the Collection</typeparam>
         /// <param name="collection"></param>
@@ -2345,6 +2460,7 @@ namespace FreshCommonUtility.DataConvert
             }
         }
         #endregion
+        #endregion
 
         #region [3.6 private]
         private static readonly MethodInfo GetTypeFromHandleMethod = typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Static | BindingFlags.Public);
@@ -2457,6 +2573,7 @@ namespace FreshCommonUtility.DataConvert
                 Label lbl = il.DefineLabel();
                 il.Emit(OpCodes.Ldloc, o);
                 il.Emit(OpCodes.Brtrue_S, lbl);
+                // ReSharper disable once AssignNullToNotNullAttribute
                 il.Emit(OpCodes.Newobj, type.GetConstructor(new Type[] { }));
                 il.Emit(OpCodes.Stloc, o);
                 il.MarkLabel(lbl);
@@ -2663,25 +2780,26 @@ namespace FreshCommonUtility.DataConvert
 
         private static class FastMapper<TTarget, TSource>
         {
-            internal static readonly MapReturnMethod<TTarget, TSource> mapReturnMethod;
+            internal static readonly MapReturnMethod<TTarget, TSource> MapReturnMethod;
 
-            internal static readonly MapMethod<TTarget, TSource> mapMethod;
+            internal static readonly MapMethod<TTarget, TSource> MapMethod;
 
             static FastMapper()
             {
-                mapReturnMethod = CreateMapReturnMethod(typeof(TTarget), typeof(TSource));
-                mapMethod = CreateMapMethod(typeof(TTarget), typeof(TSource));
+                MapReturnMethod = CreateMapReturnMethod(typeof(TTarget), typeof(TSource));
+                MapMethod = CreateMapMethod(typeof(TTarget), typeof(TSource));
             }
 
             private static MapReturnMethod<TTarget, TSource> CreateMapReturnMethod(Type targetType, Type sourceType)
             {
                 Type ownerType = targetType.IsInterface ? typeof(object) : targetType;
                 bool canSkipChecks = SecurityManager.IsGranted(new ReflectionPermission(ReflectionPermissionFlag.MemberAccess));
-                DynamicMethod map = new DynamicMethod("MapReturn", targetType, new Type[] { sourceType }, ownerType, canSkipChecks);
+                DynamicMethod map = new DynamicMethod("MapReturn", targetType, new[] { sourceType }, ownerType, canSkipChecks);
 
                 ILGenerator il = map.GetILGenerator();
                 ConstructorInfo ci = targetType.GetConstructor(new Type[0]);
                 il.DeclareLocal(targetType);
+                // ReSharper disable once AssignNullToNotNullAttribute
                 il.Emit(OpCodes.Newobj, ci);
                 il.Emit(OpCodes.Stloc_0);
                 PropertyInfo[] sourceProps = sourceType.GetProperties();
@@ -2713,6 +2831,7 @@ namespace FreshCommonUtility.DataConvert
             private static MapMethod<TTarget, TSource> CreateMapMethod(Type targetType, Type sourceType)
             {
                 Type ownerType = targetType.IsInterface ? typeof(object) : targetType;
+
                 bool canSkipChecks = SecurityManager.IsGranted(new ReflectionPermission(ReflectionPermissionFlag.MemberAccess));
                 DynamicMethod map = new DynamicMethod("Map", null, new[] { targetType, sourceType }, ownerType, canSkipChecks);
 
@@ -2771,227 +2890,6 @@ namespace FreshCommonUtility.DataConvert
     [AttributeUsage(AttributeTargets.Property)]
     public class NonCompareDifferenceAttribute : Attribute
     {
-
-    }
-}
-
-namespace Common.Converters
-{
-    /// <summary>
-    /// EntityData helper
-    /// </summary>
-    public static class EntityDataHelper
-    {
-        #region [1、Check Entity have reflect]
-        /// <summary>
-        /// 检测实体中是否存在引用，存在返回false，不存在，返回true
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="entity"></param>
-        /// <param name="errorMessage"></param>
-        /// <author>FreshMan</author>
-        /// <creattime>2017-06-21</creattime>
-        /// <returns></returns>
-        public static bool CheckEntityRelevanceIsEmpty<T>(T entity, out string errorMessage)
-        {
-            errorMessage = string.Empty;
-            var properties = typeof(T).GetProperties();
-            foreach (var propertyInfo in properties)
-            {
-                if (propertyInfo.PropertyType.IsGenericType)
-                {
-                    var t = typeof(T).GetProperty(propertyInfo.Name).GetValue(entity, null);
-                    try
-                    {
-                        ICollection ilist = t as ICollection;
-                        if (ilist != null && ilist.Count > 0)
-                        {
-                            foreach (object obj in ilist)
-                            {
-                                errorMessage = typeof(T).Name + " data template has been used by type:" + obj.GetType().FullName + " you can't delete it.";
-                                break;
-                            }
-                        }
-
-                    }
-                    catch (Exception exception)
-                    {
-                        errorMessage = exception.Message + exception.InnerException?.Message;
-                    }
-                }
-            }
-            return string.IsNullOrEmpty(errorMessage);
-        }
-        #endregion
-
-        #region [2、Generics to datatable]
-        #region [2.1 比较慢的方法]
-        /// <summary>
-        /// <para>集合转化为表格</para>
-        /// <para>T中应该只包含值类型，对应的DataTable自动匹配列名相同的属性</para>
-        /// </summary>
-        /// <typeparam name="T">类型中不应该包含有引用类型</typeparam>
-        /// <param name="entityList">转换的集合</param> 
-        /// <author>FreshMan</author>
-        /// <creattime>2017-06-26</creattime>
-        /// <returns></returns>
-        public static DataTable ToDataTableSlowly<T>(IList<T> entityList)
-        {
-            if (entityList == null) return null;
-            var dt = CreateTable<T>();
-            Type entityType = typeof(T);
-            var properties = entityType.GetProperties();
-            foreach (T item in entityList)
-            {
-                DataRow row = dt.NewRow();
-                foreach (var property in properties)
-                {
-                    if (!property.CanRead || (!property.PropertyType.IsValueType && property.PropertyType != typeof(string))) continue;
-                    row[property.Name] = property.GetValue(item, null);
-                }
-                dt.Rows.Add(row);
-            }
-            return dt;
-        }
-
-        /// <summary>
-        /// <para>创建表格</para>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="tableName"></param>
-        /// <author>FreshMan</author>
-        /// <creattime>2017-06-26</creattime>
-        /// <returns></returns>
-        private static DataTable CreateTable<T>(string tableName = null)
-        {
-            Type entityType = typeof(T);
-            PropertyDescriptorCollection propertyies = TypeDescriptor.GetProperties(entityType);
-            DataTable dt = new DataTable(tableName);
-            foreach (PropertyDescriptor prop in propertyies)
-            {
-                dt.Columns.Add(prop.Name);
-            }
-            return dt;
-        }
-        #endregion
-
-        
-        #endregion
-
-        #region [3、DataTable to generics]
-
-        /// <summary>
-        /// <para>获取动态类型数据集合</para>
-        /// </summary>
-        /// <param name="dt"></param>
-        /// <author>FreshMan</author>
-        /// <creattime>2017-06-26</creattime>
-        /// <returns></returns>
-        public static List<dynamic> ToDynamicList(DataTable dt)
-        {
-            if (dt == null) return null;
-            var list = new List<dynamic>();
-            foreach (DataRow dataRow in dt.Rows)
-            {
-                dynamic dynamicEntity = new DynamicDataEntity();
-                foreach (DataColumn column in dt.Columns)
-                {
-                    dynamicEntity[column.ColumnName] = dataRow[column];
-                }
-                list.Add(dynamicEntity);
-            }
-            return list;
-        }
-
-        #region [3.2 比较快的方法]
-        /// <summary>
-        /// <para>表格转集合</para>
-        /// <para>DataTable中的列名称自动匹配<see cref="TResult"/>中的属性</para>
-        /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="dt"></param>
-        /// <author>FreshMan</author>
-        /// <creattime>2017-06-26</creattime>
-        /// <returns></returns>
-        public static List<TResult> ToList<TResult>(DataTable dt) where TResult : class, new()
-        {
-            List<TResult> list = new List<TResult>();
-            if (dt == null) return list;
-            DataTableEntityBuilder<TResult> eblist = DataTableEntityBuilder<TResult>.CreateBuilder(dt.Rows[0]);
-            list.AddRange(from DataRow info in dt.Rows select eblist.Build(info));
-            dt.Dispose();
-            return list;
-        }
-        #endregion
-        #endregion
-    }
-
-    /// <summary>
-    /// 动态实体类
-    /// </summary>
-    public class DynamicDataEntity : DynamicObject
-    {
-        /// <summary>
-        /// 内置集合参数
-        /// </summary>
-        private readonly Dictionary<string, object> _objEntity = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary> 
-        /// Provides the implementation of getting a member.  Derived classes can override
-        /// this method to customize behavior.  When not overridden the call site requesting the 
-        /// binder determines the behavior. 
-        /// </summary>
-        /// <param name="binder">The binder provided by the call site.</param> 
-        /// <param name="result">The result of the get operation.</param>
-        /// <returns>true if the operation is complete, false if the call site should determine behavior.</returns>
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
-        {
-            _objEntity.TryGetValue(binder.Name, out result);
-            return true;
-        }
-
-        /// <summary> 
-        /// Provides the implementation of setting a member.  Derived classes can override
-        /// this method to customize behavior.  When not overridden the call site requesting the
-        /// binder determines the behavior.
-        /// </summary> 
-        /// <param name="binder">The binder provided by the call site.</param>
-        /// <param name="value">The value to set.</param> 
-        /// <returns>true if the operation is complete, false if the call site should determine behavior.</returns> 
-        public override bool TrySetMember(SetMemberBinder binder, object value)
-        {
-            //Dictionary<string, object>总是可以设置value，不管key存不存在
-            _objEntity[binder.Name] = value;
-            return true;
-        }
-
-        /// <summary>
-        ///  返回所有动态成员的Name的列表
-        /// </summary>
-        /// <returns>动态成员名称的列表</returns>
-        public override IEnumerable<string> GetDynamicMemberNames()
-        {
-            return _objEntity.Keys;
-        }
-
-        /// <summary>
-        /// 通过动态类型的成员名称获取值
-        /// </summary>
-        /// <param name="name">成员的名称</param>
-        /// <returns>该成员的值,key不存在时返回null</returns>
-        public object this[string name]
-        {
-            get
-            {
-                object value;
-                _objEntity.TryGetValue(name, out value);
-                return value;
-            }
-            set
-            {
-                _objEntity[name] = value;
-            }
-        }
     }
 
     /// <summary>
@@ -3000,8 +2898,15 @@ namespace Common.Converters
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class FieldNameAttribute : Attribute
     {
+        /// <summary>
+        /// 别名
+        /// </summary>
         public string FieldName { get; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="fieldName"></param>
         public FieldNameAttribute(string fieldName)
         {
             FieldName = fieldName;
@@ -3023,10 +2928,20 @@ namespace Common.Converters
         private Load _handler;
         private DataTableEntityBuilder() { }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dataRecord"></param>
+        /// <returns></returns>
         public TEntity Build(DataRow dataRecord)
         {
             return _handler(dataRecord);
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dataRecord"></param>
+        /// <returns></returns>
         public static DataTableEntityBuilder<TEntity> CreateBuilder(DataRow dataRecord)
         {
             DataTableEntityBuilder<TEntity> dynamicBuilder = new DataTableEntityBuilder<TEntity>();
@@ -3060,202 +2975,6 @@ namespace Common.Converters
             generator.Emit(OpCodes.Ret);
             dynamicBuilder._handler = (Load)method.CreateDelegate(typeof(Load));
             return dynamicBuilder;
-        }
-    }
-}
-
-namespace LinFramework
-{
-    /// <summary>
-    /// 实体转换
-    /// </summary>
-    public class EntityConverter
-    {
-        //数据类型和对应的强制转换方法的methodinfo，供实体属性赋值时调用
-        private static Dictionary<Type, MethodInfo> ConvertMethods = new Dictionary<Type, MethodInfo>()
-       {
-           {typeof(int),typeof(Convert).GetMethod("ToInt32",new Type[]{typeof(object)})},
-           {typeof(Int16),typeof(Convert).GetMethod("ToInt16",new Type[]{typeof(object)})},
-           {typeof(Int64),typeof(Convert).GetMethod("ToInt64",new Type[]{typeof(object)})},
-           {typeof(DateTime),typeof(Convert).GetMethod("ToDateTime",new Type[]{typeof(object)})},
-           {typeof(decimal),typeof(Convert).GetMethod("ToDecimal",new Type[]{typeof(object)})},
-           {typeof(Double),typeof(Convert).GetMethod("ToDouble",new Type[]{typeof(object)})},
-           {typeof(Boolean),typeof(Convert).GetMethod("ToBoolean",new Type[]{typeof(object)})},
-           {typeof(string),typeof(Convert).GetMethod("ToString",new Type[]{typeof(object)})},
-           {typeof(TimeSpan),typeof(TimeSpan).GetMethod("Parse",new Type[]{typeof(object)})}
-       };
-
-        //把datarow转换为实体的方法的委托定义
-        public delegate T LoadDataRow<T>(DataRow dr);
-        //把datareader转换为实体的方法的委托定义
-        public delegate T LoadDataRecord<T>(IDataRecord dr);
-
-        //emit里面用到的针对datarow的元数据信息
-        private static readonly AssembleInfo dataRowAssembly = new AssembleInfo(typeof(DataRow));
-        //emit里面用到的针对datareader的元数据信息
-        private static readonly AssembleInfo dataRecordAssembly = new AssembleInfo(typeof(IDataRecord));
-
-        /// <summary>
-        /// 构造转换动态方法（核心代码），根据assembly可处理datarow和datareader两种转换
-        /// </summary>
-        /// <typeparam name="T">返回的实体类型</typeparam>
-        /// <param name="assembly">待转换数据的元数据信息</param>
-        /// <returns>实体对象</returns>
-        private static DynamicMethod BuildMethod<T>(AssembleInfo assembly)
-        {
-            DynamicMethod method = new DynamicMethod(assembly.MethodName + typeof(T).Name, MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard, typeof(T),
-                    new Type[] { assembly.SourceType }, typeof(T).Module, true);
-            ILGenerator generator = method.GetILGenerator();
-            LocalBuilder result = generator.DeclareLocal(typeof(T));
-            generator.Emit(OpCodes.Newobj, typeof(T).GetConstructor(Type.EmptyTypes));
-            generator.Emit(OpCodes.Stloc, result);
-
-            foreach (PropertyInfo property in typeof(T).GetProperties())
-            {
-                Label endIfLabel = generator.DefineLabel();
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldstr, property.Name);
-                generator.Emit(OpCodes.Callvirt, assembly.CanSettedMethod);
-                generator.Emit(OpCodes.Brfalse, endIfLabel);
-                generator.Emit(OpCodes.Ldloc, result);
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldstr, property.Name);
-                generator.Emit(OpCodes.Callvirt, assembly.GetValueMethod);
-                if (property.PropertyType.IsValueType || property.PropertyType == typeof(string))
-                    generator.Emit(OpCodes.Call, ConvertMethods[property.PropertyType]);
-                else
-                    generator.Emit(OpCodes.Castclass, property.PropertyType);
-                generator.Emit(OpCodes.Callvirt, property.GetSetMethod());
-                generator.MarkLabel(endIfLabel);
-            }
-            generator.Emit(OpCodes.Ldloc, result);
-            generator.Emit(OpCodes.Ret);
-            return method;
-        }
-
-        /// <summary>
-        /// 从Cache获取委托 LoadDataRow<T>的方法实例，没有则调用BuildMethod构造一个。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private static LoadDataRow<T> GetDataRowMethod<T>()
-        {
-            string key = dataRowAssembly.MethodName + typeof(T).Name;
-            LoadDataRow<T> load = null;
-            //if (HttpRuntime.Cache[key] == null)
-            //{
-            load = (LoadDataRow<T>)BuildMethod<T>(dataRowAssembly).CreateDelegate(typeof(LoadDataRow<T>));
-            //    HttpRuntime.Cache[key] = load;
-            //}
-            //else
-            //{
-            //    load = HttpRuntime.Cache[key] as LoadDataRow<T>;
-            //}
-            return load;
-        }
-
-        /// <summary>
-        /// 从Cache获取委托 LoadDataRecord<T>的方法实例，没有则调用BuildMethod构造一个。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private static LoadDataRecord<T> GetDataRecordMethod<T>()
-        {
-            string key = dataRecordAssembly.MethodName + typeof(T).Name;
-            LoadDataRecord<T> load = null;
-            //if (HttpRuntime.Cache[key] == null)
-            //{
-            load = (LoadDataRecord<T>)BuildMethod<T>(dataRecordAssembly).CreateDelegate(typeof(LoadDataRecord<T>));
-            //    HttpRuntime.Cache[key] = load;
-            //}
-            //else
-            //{
-            //    load = HttpRuntime.Cache[key] as LoadDataRecord<T>;
-            //}
-            return load;
-        }
-
-
-        public static T ToItem<T>(DataRow dr)
-        {
-            LoadDataRow<T> load = GetDataRowMethod<T>();
-            return load(dr);
-        }
-
-        public static List<T> ToList<T>(DataTable dt)
-        {
-            List<T> list = new List<T>();
-            if (dt == null || dt.Rows.Count == 0)
-            {
-                return list;
-            }
-            LoadDataRow<T> load = GetDataRowMethod<T>();
-            foreach (DataRow dr in dt.Rows)
-            {
-                list.Add(load(dr));
-            }
-            return list;
-        }
-
-        public static List<T> ToList<T>(IDataReader dr)
-        {
-            List<T> list = new List<T>();
-            LoadDataRecord<T> load = GetDataRecordMethod<T>();
-            while (dr.Read())
-            {
-                list.Add(load(dr));
-            }
-            return list;
-        }
-
-    }
-
-    /// <summary>
-    /// emit所需要的元数据信息
-    /// </summary>
-    public class AssembleInfo
-    {
-        public AssembleInfo(Type type)
-        {
-            SourceType = type;
-            MethodName = "Convert" + type.Name + "To";
-            CanSettedMethod = this.GetType().GetMethod("CanSetted", new Type[] { type, typeof(string) });
-            GetValueMethod = type.GetMethod("get_Item", new Type[] { typeof(string) });
-        }
-        public string MethodName;
-        public Type SourceType;
-        public MethodInfo CanSettedMethod;
-        public MethodInfo GetValueMethod;
-
-        /// <summary>
-        /// 判断datareader是否存在某字段并且值不为空
-        /// </summary>
-        /// <param name="dr">当前的datareader</param>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        public static bool CanSetted(IDataRecord dr, string name)
-        {
-            bool result = false;
-            for (int i = 0; i < dr.FieldCount; i++)
-            {
-                if (dr.GetName(i).Equals(name, StringComparison.CurrentCultureIgnoreCase) && !dr[i].Equals(DBNull.Value))
-                {
-                    result = true;
-                    break;
-                }
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// 判断datarow所在的datatable是否存在某列并且值不为空
-        /// </summary>
-        /// <param name="dr">当前datarow</param>
-        /// <param name="name">字段名</param>
-        /// <returns></returns>
-        public static bool CanSetted(DataRow dr, string name)
-        {
-            return dr.Table.Columns.Contains(name) && !dr.IsNull(name);
         }
     }
 }
