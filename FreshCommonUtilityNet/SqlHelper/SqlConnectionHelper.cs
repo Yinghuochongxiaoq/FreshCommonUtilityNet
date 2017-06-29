@@ -86,7 +86,8 @@ namespace FreshCommonUtility.SqlHelper
                 connection = new NpgsqlConnection(ConnectionString);
                 SimpleCRUD.SetDialect(SimpleCRUD.Dialect.PostgreSQL);
             }
-            else if (dbtype == SimpleCRUD.Dialect.MySQL)
+            else
+            if (dbtype == SimpleCRUD.Dialect.MySQL)
             {
                 connection = new MySqlConnection(ConnectionString);
                 SimpleCRUD.SetDialect(SimpleCRUD.Dialect.MySQL);
