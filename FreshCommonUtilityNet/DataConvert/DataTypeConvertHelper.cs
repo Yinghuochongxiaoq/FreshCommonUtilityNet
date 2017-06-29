@@ -1956,7 +1956,7 @@ namespace FreshCommonUtility.DataConvert
         #region [3.1.2 比较慢的方法]
         /// <summary>
         /// <para>表格转集合</para>
-        /// <para>DataTable中的列名称自动匹配<see cref="TResult"/>中的属性</para>
+        /// <para>DataTable中的列名称自动匹配TResult"/>中的属性</para>
         /// <para>当数据量大于100时，请用<see cref="ToListFast{TResult}"/></para>
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
