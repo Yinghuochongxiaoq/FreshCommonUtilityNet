@@ -222,7 +222,6 @@ namespace FreshCommonUtilityNetTest
                 Console.Write("\r\n");
             }
             var backListChange = DataTypeConvertHelper.ToList<TestsTabelToListObject>(tableFile);
-            //var backList=EntityDataHelper.ToList<TestsTabelToListObject>(tableFile);
         }
         #endregion
     }
