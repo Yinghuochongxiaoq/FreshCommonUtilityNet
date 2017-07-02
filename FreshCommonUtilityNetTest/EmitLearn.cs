@@ -30,12 +30,36 @@ namespace FreshCommonUtilityNetTest
         }
     }
 
+    public class Add
+    {
+        private int _a;
+        public int A { get { return _a; } set { _a = value; } }
+
+        private int _b;
+        public int B { get { return _b; } set { _b = value; } }
+
+        public Add(int a, int b)
+        {
+            _a = a;
+            _b = b;
+        }
+
+        public int Calc()
+        {
+            return _a + _b;
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class EmitLearn
     {
         public static void LearnInfo()
         {
             Helloworld();
             CreateAssembly();
+            AddMethod();
         }
 
         #region [1、Hello World]
@@ -170,6 +194,167 @@ namespace FreshCommonUtilityNetTest
             {
                 Console.WriteLine(type.GetMethod("Calc").Invoke(ob, new object[] { i }));
             }
+
+            #endregion
+        }
+        #endregion
+
+        #region [3、Add method]
+
+        /// <summary>
+        /// Add method
+        /// </summary>
+        private static void AddMethod()
+        {
+            string name = "EmitExamples.DynamicAdd";
+            string asmFileName = name + ".dll";
+            #region step1 构建程序集
+            //创建程序集名
+            AssemblyName asmName = new AssemblyName(name);
+
+            //获取程序集所在的应用程序域
+            AppDomain domain = AppDomain.CurrentDomain;
+
+            //实例化一个AssemblyBuilder对象来实现动态程序的构建
+            AssemblyBuilder assemblyBuilder = domain.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
+
+            #endregion
+
+            #region step2 定义模块
+
+            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule(name, asmFileName);
+
+            #endregion
+
+            #region step3 定义类型
+
+            TypeBuilder typeBuilder = moduleBuilder.DefineType(name, TypeAttributes.Public);
+
+            #endregion
+
+            #region step4 定义属性
+            //定义私有字段_a和_b
+            FieldBuilder fieldABuilder = typeBuilder.DefineField("_a", typeof(Int32), FieldAttributes.Private);
+            FieldBuilder fieldBBuilder = typeBuilder.DefineField("_b", typeof(Int32), FieldAttributes.Private);
+            fieldABuilder.SetConstant(0);
+            fieldBBuilder.SetConstant(0);
+
+            //定义共有属性A和B
+            PropertyBuilder propertyABuilder = typeBuilder.DefineProperty("A", PropertyAttributes.None, typeof(Int32),
+                null);
+            PropertyBuilder propertyBBuilder = typeBuilder.DefineProperty("B", PropertyAttributes.None, typeof(Int32),
+                null);
+
+            #endregion
+
+            #region step5 定义属性A的get和set方法
+            //定义属性A的get方法
+            MethodBuilder getPropertyABuilder = typeBuilder.DefineMethod("get",
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeof(Int32),
+                Type.EmptyTypes);
+
+            //生成属性A的get方法的IL代码，返回私有字段_a
+            ILGenerator getAIL = getPropertyABuilder.GetILGenerator();
+            getAIL.Emit(OpCodes.Ldarg_0);
+            getAIL.Emit(OpCodes.Ldfld, fieldABuilder);
+            getAIL.Emit(OpCodes.Ret);
+
+            //定义属性A的set方法
+            MethodBuilder setPropertyABuilder = typeBuilder.DefineMethod("set",
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null,
+                new Type[] { typeof(Int32) });
+
+            //生成属性A的set方法的IL代码，即设置私有字段_a值为传入的参数1的值
+            ILGenerator setAIL = setPropertyABuilder.GetILGenerator();
+
+            setAIL.Emit(OpCodes.Ldarg_0);
+            setAIL.Emit(OpCodes.Ldarg_1);
+            setAIL.Emit(OpCodes.Stfld, fieldABuilder);
+            setAIL.Emit(OpCodes.Ret);
+
+            //设置属性A的get和set方法
+            propertyABuilder.SetGetMethod(getPropertyABuilder);
+            propertyABuilder.SetGetMethod(setPropertyABuilder);
+            #endregion
+
+            #region step6 定义属性B的get和set方法
+            //定义属性A的get方法
+            MethodBuilder getPropertyBBuilder = typeBuilder.DefineMethod("get",
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeof(Int32),
+                Type.EmptyTypes);
+
+            //生成属性B的get方法的IL代码，返回私有字段_b
+            ILGenerator getBIL = getPropertyBBuilder.GetILGenerator();
+            getBIL.Emit(OpCodes.Ldarg_0);
+            getBIL.Emit(OpCodes.Ldfld, fieldBBuilder);
+            getBIL.Emit(OpCodes.Ret);
+
+            //定义属性B的set方法
+            MethodBuilder setPropertyBBuilder = typeBuilder.DefineMethod("set",
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, null,
+                new Type[] { typeof(Int32) });
+
+            //生成属性B的set方法的IL代码，即设置私有字段_b值为传入的参数1的值
+            ILGenerator setBIL = setPropertyBBuilder.GetILGenerator();
+
+            setBIL.Emit(OpCodes.Ldarg_0);
+            setBIL.Emit(OpCodes.Ldarg_1);
+            setBIL.Emit(OpCodes.Stfld, fieldBBuilder);
+            setBIL.Emit(OpCodes.Ret);
+
+            //设置属性B的get和set方法
+            propertyBBuilder.SetGetMethod(getPropertyBBuilder);
+            propertyBBuilder.SetGetMethod(setPropertyBBuilder);
+            #endregion
+
+            #region setp7 定义构造函数
+
+            ConstructorBuilder constructorBuilder = typeBuilder.DefineConstructor(MethodAttributes.Public,
+                CallingConventions.HasThis, new Type[] { typeof(Int32), typeof(Int32) });
+            ILGenerator ctorIL = constructorBuilder.GetILGenerator();
+
+            //加载参数1填充到私有字段_a
+            ctorIL.Emit(OpCodes.Ldarg_0);
+            ctorIL.Emit(OpCodes.Ldarg_1);
+            ctorIL.Emit(OpCodes.Stfld, fieldABuilder);
+            //加载参数2填充到私有字段_b
+            ctorIL.Emit(OpCodes.Ldarg_0);
+            ctorIL.Emit(OpCodes.Ldarg_2);
+            ctorIL.Emit(OpCodes.Stfld, fieldBBuilder);
+            ctorIL.Emit(OpCodes.Ret);
+
+            #endregion
+
+            #region step8 定义方法
+
+            MethodBuilder calcMethodBuilder = typeBuilder.DefineMethod("Calc", MethodAttributes.Public, typeof(Int32),
+                Type.EmptyTypes);
+
+            ILGenerator calcIL = calcMethodBuilder.GetILGenerator();
+
+            //加载私有字段_a
+            calcIL.Emit(OpCodes.Ldarg_0);
+            calcIL.Emit(OpCodes.Ldfld, fieldABuilder);
+            //加载私有字段_b
+            calcIL.Emit(OpCodes.Ldarg_0);
+            calcIL.Emit(OpCodes.Ldfld, fieldBBuilder);
+            //相加并返回结果
+            calcIL.Emit(OpCodes.Add);
+            calcIL.Emit(OpCodes.Ret);
+            #endregion
+
+            #region Step9 收获
+
+            Type type = typeBuilder.CreateType();
+
+            int a = 2;
+            int b = 3;
+
+            Object ob = Activator.CreateInstance(type, new object[] { a, b });
+
+            Console.WriteLine("The Result of {0} + {1} is {2}.", a, b, ob.GetType().GetMethod("Calc").Invoke(ob, null));
+
+            assemblyBuilder.Save(asmFileName);
 
             #endregion
         }
