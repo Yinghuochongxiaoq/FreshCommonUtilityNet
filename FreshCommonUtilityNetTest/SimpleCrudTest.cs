@@ -63,7 +63,7 @@ namespace FreshCommonUtilityTests
         /// Get open connection object.
         /// </summary>
         /// <returns></returns>
-        private IDbConnection GetOpenConnection()
+        public IDbConnection GetOpenConnection()
         {
             IDbConnection connection;
             var postgreConnectionString = $"Server={_hostName};Port={_port};User Id={_userName};Password={_password};Database={_dbName};";
@@ -74,7 +74,7 @@ namespace FreshCommonUtilityTests
             var dictionary = new Dictionary<string, string>()
             {
                 { SimpleCRUD.Dialect.MySQL.ToString(), mysqlConnectionString },
-                { SimpleCRUD.Dialect.PostgreSQL.ToString(),postgreConnectionString},
+                //{ SimpleCRUD.Dialect.PostgreSQL.ToString(),postgreConnectionString},
                 { SimpleCRUD.Dialect.SQLServer.ToString(),sqlserverConnectionString},
                 { SimpleCRUD.Dialect.SQLite.ToString(),sqliteConnectionString }
             };
@@ -662,8 +662,8 @@ namespace FreshCommonUtilityTests
         public void TestChangeDialect()
         {
             var currentDbType = SimpleCRUD.GetDialect();
-            SimpleCRUD.SetDialect(SimpleCRUD.Dialect.PostgreSQL);
-            SimpleCRUD.GetDialect().IsEqualTo(SimpleCRUD.Dialect.PostgreSQL);
+            SimpleCRUD.SetDialect(SimpleCRUD.Dialect.MySQL);
+            SimpleCRUD.GetDialect().IsEqualTo(SimpleCRUD.Dialect.MySQL);
             SimpleCRUD.SetDialect(SimpleCRUD.Dialect.SQLServer);
             SimpleCRUD.GetDialect().IsEqualTo(SimpleCRUD.Dialect.SQLServer);
             SimpleCRUD.SetDialect(currentDbType);

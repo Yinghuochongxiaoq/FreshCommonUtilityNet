@@ -10,7 +10,6 @@ using FreshCommonUtility.Dapper;
 using FreshCommonUtility.SqlHelper;
 using FreshCommonUtilityTests;
 using MySql.Data.MySqlClient;
-using Npgsql;
 
 namespace FreshCommonUtilityNetTest
 {
@@ -24,25 +23,25 @@ namespace FreshCommonUtilityNetTest
             //SetUp();
             //RunTestSqlServer();
 
-            //SetupMySql();
-            //RunTestMySql();
+            SetupMySql();
+            RunTestMySql();
 
             //SetupSqLite();
             //RunTestsSqLite();
 
-            //var stopwatch = Stopwatch.StartNew();
-            //var pgtester = new TestClass();
-            //foreach (var method in typeof(TestClass).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            //{
-            //    var testwatch = Stopwatch.StartNew();
-            //    Console.Write("Running " + method.Name + " in FreshCommonUtilityNetTest:");
-            //    method.Invoke(pgtester, null);
-            //    Console.WriteLine(" - OK! {0}ms", testwatch.ElapsedMilliseconds);
-            //}
-            //stopwatch.Stop();
-            //Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
+            var stopwatch = Stopwatch.StartNew();
+            var pgtester = new TestClass();
+            foreach (var method in typeof(TestClass).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                var testwatch = Stopwatch.StartNew();
+                Console.Write("Running " + method.Name + " in FreshCommonUtilityNetTest:");
+                method.Invoke(pgtester, null);
+                Console.WriteLine(" - OK! {0}ms", testwatch.ElapsedMilliseconds);
+            }
+            stopwatch.Stop();
+            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
 
-            EmitLearn.LearnInfo();
+            //EmitLearn.LearnInfo();
 
             Console.ReadKey();
         }
@@ -82,38 +81,6 @@ namespace FreshCommonUtilityNetTest
                 connection.Execute(@" CREATE TABLE KeyMaster ([Key1] [int] NOT NULL, [Key2] [int] NOT NULL, CONSTRAINT [PK_KeyMaster] PRIMARY KEY CLUSTERED ([Key1] ASC, [Key2] ASC))");
             }
             Console.WriteLine("Created database");
-        }
-
-        /// <summary>
-        /// Pg DbInit
-        /// </summary>
-        private static void SetupPg()
-        {
-            using (var connection = new NpgsqlConnection(string.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "localhost", "5432", "postgres", "postgrespass", "postgres")))
-            {
-                connection.Open();
-                // drop  database 
-                connection.Execute("DROP DATABASE IF EXISTS  testdb;");
-                connection.Execute("CREATE DATABASE testdb  WITH OWNER = postgres ENCODING = 'UTF8' CONNECTION LIMIT = -1;");
-            }
-            System.Threading.Thread.Sleep(1000);
-
-            using (var connection = new NpgsqlConnection(string.Format("Server={0};Port={1};User Id={2};Password={3};Database={4};", "localhost", "5432", "postgres", "postgrespass", "testdb")))
-            {
-                connection.Open();
-                connection.Execute(@" create table Users (Id SERIAL PRIMARY KEY, Name varchar not null, Age int not null, ScheduledDayOff int null, CreatedDate date not null default CURRENT_DATE) ");
-                connection.Execute(@" create table Car (CarId SERIAL PRIMARY KEY, Id int null, Make varchar not null, Model varchar not null) ");
-                connection.Execute(@" create table BigCar (CarId BIGSERIAL PRIMARY KEY, Make varchar not null, Model varchar not null) ");
-                connection.Execute(@" alter sequence bigcar_carid_seq RESTART WITH 2147483650");
-                connection.Execute(@" create table City (Name varchar not null, Population int not null) ");
-                connection.Execute(@" CREATE SCHEMA Log; ");
-                connection.Execute(@" create table Log.CarLog (Id SERIAL PRIMARY KEY, LogNotes varchar NOT NULL) ");
-                connection.Execute(@" CREATE TABLE GUIDTest(Id uuid PRIMARY KEY,name varchar NOT NULL)");
-                connection.Execute(@" create table StrangeColumnNames (ItemId Serial PRIMARY KEY, word varchar not null, colstringstrangeword varchar, keywordedproperty varchar) ");
-                connection.Execute(@" create table UserWithoutAutoIdentity (Id int PRIMARY KEY, Name varchar not null, Age int not null) ");
-
-            }
-
         }
 
         /// <summary>
@@ -181,33 +148,13 @@ namespace FreshCommonUtilityNetTest
         }
 
         /// <summary>
-        /// test pg server
-        /// </summary>
-        private static void RunTestPg()
-        {
-            var stopwatch = Stopwatch.StartNew();
-            var pgtester = new SimpleCrudTest(SimpleCRUD.Dialect.PostgreSQL);
-            foreach (var method in typeof(SimpleCrudTest).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                var testwatch = Stopwatch.StartNew();
-                Console.Write("Running " + method.Name + " in PostgreSQL");
-                method.Invoke(pgtester, null);
-                Console.WriteLine(" - OK! {0}ms", testwatch.ElapsedMilliseconds);
-            }
-            stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
-
-            Console.Write("PostgreSQL testing complete.");
-            Console.ReadKey();
-        }
-
-        /// <summary>
         /// test mysql
         /// </summary>
         private static void RunTestMySql()
         {
             var stopwatch = Stopwatch.StartNew();
             var mysqltester = new SimpleCrudTest(SimpleCRUD.Dialect.MySQL);
+            mysqltester.GetOpenConnection();
             foreach (var method in typeof(SimpleCrudTest).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
                 //skip schema tests

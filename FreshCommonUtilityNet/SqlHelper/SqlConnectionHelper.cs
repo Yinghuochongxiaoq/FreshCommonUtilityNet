@@ -4,7 +4,6 @@ using System.Data.SQLite;
 using FreshCommonUtility.Configure;
 using FreshCommonUtility.Dapper;
 using MySql.Data.MySqlClient;
-using Npgsql;
 
 // ReSharper disable once CheckNamespace
 namespace FreshCommonUtility.SqlHelper
@@ -81,12 +80,12 @@ namespace FreshCommonUtility.SqlHelper
                 ConnectionString = connectionString;
             }
             IDbConnection connection;
-            if (dbtype == SimpleCRUD.Dialect.PostgreSQL)
-            {
-                connection = new NpgsqlConnection(ConnectionString);
-                SimpleCRUD.SetDialect(SimpleCRUD.Dialect.PostgreSQL);
-            }
-            else
+            //if (dbtype == SimpleCRUD.Dialect.PostgreSQL)
+            //{
+            //    connection = new NpgsqlConnection(ConnectionString);
+            //    SimpleCRUD.SetDialect(SimpleCRUD.Dialect.PostgreSQL);
+            //}
+            //else
             if (dbtype == SimpleCRUD.Dialect.MySQL)
             {
                 connection = new MySqlConnection(ConnectionString);

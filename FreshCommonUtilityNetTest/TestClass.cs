@@ -13,8 +13,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using FreshCommonUtility.DataConvert;
+using FreshCommonUtility.DeepCopy;
 using FreshCommonUtility.Security;
-using FreshCommonUtilityNet.Npoi;
+using FreshCommonUtility.Npoi;
 
 namespace FreshCommonUtilityNetTest
 {
@@ -157,71 +158,104 @@ namespace FreshCommonUtilityNetTest
         #endregion
 
         #region [5 Test DataTable to list]
-
+        /// <summary>
+        /// Test list set.
+        /// </summary>
+        private readonly List<TestsTabelToListObject> _testList = new List<TestsTabelToListObject>
+        {
+            new TestsTabelToListObject
+            {
+                Age = 10,
+                Height = 20.907,
+                Name = "qinxianbo",
+                Right = true,
+                Sex = EnumSex.boy,
+                YouLong = new TimeSpan(1, 1, 1, 1)
+            },
+            new TestsTabelToListObject
+            {
+                Age = 23,
+                Height = 234.907,
+                Name = "秦先波",
+                Right = true,
+                Sex = EnumSex.boy,
+                YouLong = new TimeSpan(1, 1, 1, 2)
+            },
+            new TestsTabelToListObject
+            {
+                Age = 40,
+                Height = 20.907,
+                Name = "qinxianbo",
+                Right = true,
+                Sex = EnumSex.boy,
+                YouLong = new TimeSpan(1, 1, 1, 3)
+            },
+            new TestsTabelToListObject
+            {
+                Height = 20.907,
+                Name = "杨宏俊",
+                Right = true,
+                Sex = EnumSex.grily,
+                YouLong = new TimeSpan(1, 1, 1, 4)
+            },
+            new TestsTabelToListObject
+            {
+                Age = 10,
+                Name = "k",
+                Height = 20.907,
+                Right = true,
+                Sex = EnumSex.boy,
+                YouLong = new TimeSpan(1, 1, 1, 5)
+            }
+        };
         public void DataTableToList()
         {
-            var testList = new List<TestsTabelToListObject>
-            {
-                new TestsTabelToListObject
-                {
-                    Age = 10,
-                    Height = 20.907,
-                    Name = "qinxianbo",
-                    Right = true,
-                    Sex = EnumSex.boy,
-                    YouLong = new TimeSpan(1, 1, 1, 1)
-                },
-                new TestsTabelToListObject
-                {
-                    Age =23,
-                    Height = 234.907,
-                    Name = "秦先波",
-                    Right = true,
-                    Sex = EnumSex.boy,
-                    YouLong = new TimeSpan(1, 1, 1, 2)
-                },
-                new TestsTabelToListObject
-                {
-                    Age = 40,
-                    Height = 20.907,
-                    Name = "qinxianbo",
-                    Right = true,
-                    Sex = EnumSex.boy,
-                    YouLong = new TimeSpan(1, 1, 1, 3)
-                },
-                new TestsTabelToListObject
-                {
-                    Height = 20.907,
-                    Name = "杨宏俊",
-                    Right = true,
-                    Sex = EnumSex.grily,
-                    YouLong = new TimeSpan(1, 1, 1, 4)
-                },
-                new TestsTabelToListObject
-                {
-                    Age = 10,
-                    Name = "k",
-                    Height = 20.907,
-                    Right = true,
-                    Sex = EnumSex.boy,
-                    YouLong = new TimeSpan(1, 1, 1, 5)
-                }
-            };
-            var table = DataTypeConvertHelper.ToDataTable(testList);
+            var table = DataTypeConvertHelper.ToDataTable(_testList);
             var npoi = new NpoiHelper("TestTable.xlsx");
             npoi.DataTableToExcel(table, null, true);
             string errorMessage;
             var tableFile = npoi.ExcelToDataTable(0, true, out errorMessage);
-            foreach (DataRow dataRow in tableFile.Rows)
-            {
-                dataRow.ItemArray.ToList().ForEach(f =>
-                {
-                    Console.Write(f);
-                    Console.Write("  ");
-                });
-                Console.Write("\r\n");
-            }
+            //foreach (DataRow dataRow in tableFile.Rows)
+            //{
+            //    dataRow.ItemArray.ToList().ForEach(f =>
+            //    {
+            //        Console.Write(f);
+            //        Console.Write("  ");
+            //    });
+            //    Console.Write("\r\n");
+            //}
             var backListChange = DataTypeConvertHelper.ToList<TestsTabelToListObject>(tableFile);
+            _testList.Count.IsEqualTo(backListChange.Count);
+        }
+        #endregion
+
+        #region [6 Test deep copy helper]
+
+        /// <summary>
+        /// Test deep copy helper
+        /// </summary>
+        public void DeepCopyTest()
+        {
+            var tempObj = new TestsTabelToListObject
+            {
+                Age = 10,
+                Name = "k",
+                Height = 20.907,
+                Right = true,
+                Sex = EnumSex.boy,
+                YouLong = new TimeSpan(1, 1, 1, 5)
+            };
+            var copyResult = tempObj.DeepCopy();
+            new TimeSpan(1, 1, 1, 5).IsEqualTo(copyResult.YouLong);
+
+            var list = new List<TestsTabelToListObject>();
+            _testList.ForEach(f =>
+            {
+                var temp = new TestsTabelToListObject();
+                f.DeepCopy(temp);
+                list.Add(temp);
+            });
+            list.Count.IsEqualTo(_testList.Count);
         }
         #endregion
     }

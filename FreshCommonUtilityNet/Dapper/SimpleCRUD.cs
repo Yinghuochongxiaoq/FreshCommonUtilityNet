@@ -64,12 +64,12 @@ namespace FreshCommonUtility.Dapper
         {
             switch (dialect)
             {
-                case Dialect.PostgreSQL:
-                    _dialect = Dialect.PostgreSQL;
-                    _encapsulation = "\"{0}\"";
-                    _getIdentitySql = "SELECT LASTVAL() AS id";
-                    _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
-                    break;
+                //case Dialect.PostgreSQL:
+                //    _dialect = Dialect.PostgreSQL;
+                //    _encapsulation = "\"{0}\"";
+                //    _getIdentitySql = "SELECT LASTVAL() AS id";
+                //    _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
+                //    break;
                 case Dialect.SQLite:
                     _dialect = Dialect.SQLite;
                     _encapsulation = "\"{0}\"";
@@ -1003,7 +1003,7 @@ namespace FreshCommonUtility.Dapper
             /// <summary>
             /// PostgreSQL
             /// </summary>
-            PostgreSQL = 1,
+            //PostgreSQL = 1,
 
             /// <summary>
             /// MySQL

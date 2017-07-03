@@ -16,7 +16,8 @@ using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
-namespace FreshCommonUtilityNet.Npoi
+// ReSharper disable once CheckNamespace
+namespace FreshCommonUtility.Npoi
 {
     /// <summary>
     /// NPOI文件解析类
@@ -64,111 +65,113 @@ namespace FreshCommonUtilityNet.Npoi
         public int DataTableToExcel(DataTable data, string sheetName, bool isColumnWritten)
         {
             if (string.IsNullOrEmpty(_fileName)) return 0;
-            _fs = new FileStream(_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            //2007版本
-            if (_fileName.EndsWith(".xlsx")) _workbook = new XSSFWorkbook();
-            //2003版本
-            else if (_fileName.EndsWith(".xls")) _workbook = new HSSFWorkbook();
-            //非合法路径
-            else return -1;
-            //列数据量
-            var icolIndex = 0;
             try
             {
-                #region 创建数据表（sheet）
-                ISheet sheet;
-                if (_workbook != null)
-                {
-                    sheet = string.IsNullOrEmpty(sheetName) ? _workbook.CreateSheet() : _workbook.CreateSheet(sheetName);
-                }
-                else
-                {
-                    return -1;
-                }
-                #endregion
-
-                #region 写入DataTable的列名
-
-                //起始数据行号（0开始）
-                int count;
-                if (isColumnWritten)
-                {
-                    #region 首行样式
-                    var headercellStyle = _workbook.CreateCellStyle();
-                    headercellStyle.BorderBottom = BorderStyle.Thin;
-                    headercellStyle.BorderLeft = BorderStyle.Thin;
-                    headercellStyle.BorderRight = BorderStyle.Thin;
-                    headercellStyle.BorderTop = BorderStyle.Thin;
-                    headercellStyle.Alignment = HorizontalAlignment.Center;
-                    //字体
-                    var headerfont = _workbook.CreateFont();
-                    headerfont.Boldweight = (short)FontBoldWeight.Bold;
-                    headercellStyle.SetFont(headerfont);
-                    #endregion
-
-                    #region 首行数据
-                    //用column name 作为列名
-                    var headerRow = sheet.CreateRow(0);
-                    foreach (DataColumn item in data.Columns)
-                    {
-                        var cell = headerRow.CreateCell(icolIndex);
-                        cell.SetCellValue(item.ColumnName);
-                        cell.CellStyle = headercellStyle;
-                        icolIndex++;
-                    }
-                    #endregion
-
-                    count = 1;
-                }
-                else
-                {
-                    count = 0;
-                }
-                #endregion
-
-                #region 内容行格式
-                var cellStyle = _workbook.CreateCellStyle();
-
-                //为避免日期格式被Excel自动替换，所以设定 format 为 『@』 表示一率当成text來看
-                cellStyle.DataFormat = HSSFDataFormat.GetBuiltinFormat("@");
-                cellStyle.BorderBottom = BorderStyle.Thin;
-                cellStyle.BorderLeft = BorderStyle.Thin;
-                cellStyle.BorderRight = BorderStyle.Thin;
-                cellStyle.BorderTop = BorderStyle.Thin;
-
-
-                var cellfont = _workbook.CreateFont();
-                cellfont.Boldweight = (short)FontBoldWeight.Normal;
-                cellStyle.SetFont(cellfont);
-                //自适应列宽度
-                for (int iCol = 0; iCol < icolIndex; iCol++)
-                {
-                    sheet.AutoSizeColumn(iCol);
-                }
-                #endregion
-
-                #region 数据行内容填充
-                for (var i = 0; i < data.Rows.Count; ++i)
-                {
-                    var row = sheet.CreateRow(count);
-                    for (var j = 0; j < data.Columns.Count; ++j)
-                    {
-                        ICell cell = row.CreateCell(j);
-                        cell.SetCellValue(data.Rows[i][j].ToString());
-                        cell.CellStyle = cellStyle;
-                    }
-                    ++count;
-                }
-                #endregion
-
-                //写入到excel
-                _workbook.Write(_fs);
-                return count;
+                _fs = new FileStream(_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                //2007版本
+                if (_fileName.EndsWith(".xlsx")) _workbook = new XSSFWorkbook();
+                //2003版本
+                else if (_fileName.EndsWith(".xls")) _workbook = new HSSFWorkbook();
+                //非合法路径
+                else return -1;
             }
             catch (Exception)
             {
+                _fs.Dispose();
+                throw;
+            }
+            //列数据量
+            var icolIndex = 0;
+
+            #region 创建数据表（sheet）
+            ISheet sheet;
+            if (_workbook != null)
+            {
+                sheet = string.IsNullOrEmpty(sheetName) ? _workbook.CreateSheet() : _workbook.CreateSheet(sheetName);
+            }
+            else
+            {
                 return -1;
             }
+            #endregion
+
+            #region 写入DataTable的列名
+
+            //起始数据行号（0开始）
+            int count;
+            if (isColumnWritten)
+            {
+                #region 首行样式
+                var headercellStyle = _workbook.CreateCellStyle();
+                headercellStyle.BorderBottom = BorderStyle.Thin;
+                headercellStyle.BorderLeft = BorderStyle.Thin;
+                headercellStyle.BorderRight = BorderStyle.Thin;
+                headercellStyle.BorderTop = BorderStyle.Thin;
+                headercellStyle.Alignment = HorizontalAlignment.Center;
+                //字体
+                var headerfont = _workbook.CreateFont();
+                headerfont.Boldweight = (short)FontBoldWeight.Bold;
+                headercellStyle.SetFont(headerfont);
+                #endregion
+
+                #region 首行数据
+                //用column name 作为列名
+                var headerRow = sheet.CreateRow(0);
+                foreach (DataColumn item in data.Columns)
+                {
+                    var cell = headerRow.CreateCell(icolIndex);
+                    cell.SetCellValue(item.ColumnName);
+                    cell.CellStyle = headercellStyle;
+                    icolIndex++;
+                }
+                #endregion
+
+                count = 1;
+            }
+            else
+            {
+                count = 0;
+            }
+            #endregion
+
+            #region 内容行格式
+            var cellStyle = _workbook.CreateCellStyle();
+
+            //为避免日期格式被Excel自动替换，所以设定 format 为 『@』 表示一率当成text來看
+            cellStyle.DataFormat = HSSFDataFormat.GetBuiltinFormat("@");
+            cellStyle.BorderBottom = BorderStyle.Thin;
+            cellStyle.BorderLeft = BorderStyle.Thin;
+            cellStyle.BorderRight = BorderStyle.Thin;
+            cellStyle.BorderTop = BorderStyle.Thin;
+
+
+            var cellfont = _workbook.CreateFont();
+            cellfont.Boldweight = (short)FontBoldWeight.Normal;
+            cellStyle.SetFont(cellfont);
+            //自适应列宽度
+            for (int iCol = 0; iCol < icolIndex; iCol++)
+            {
+                sheet.AutoSizeColumn(iCol);
+            }
+            #endregion
+
+            #region 数据行内容填充
+            for (var i = 0; i < data.Rows.Count; ++i)
+            {
+                var row = sheet.CreateRow(count);
+                for (var j = 0; j < data.Columns.Count; ++j)
+                {
+                    ICell cell = row.CreateCell(j);
+                    cell.SetCellValue(data.Rows[i][j].ToString());
+                    cell.CellStyle = cellStyle;
+                }
+                ++count;
+            }
+            #endregion
+
+            //写入到excel
+            _workbook.Write(_fs);
+            return count;
         }
         #endregion
 
