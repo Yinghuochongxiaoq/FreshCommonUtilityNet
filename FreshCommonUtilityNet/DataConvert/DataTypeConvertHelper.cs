@@ -2032,6 +2032,7 @@ namespace FreshCommonUtility.DataConvert
         /// <para>表格转集合</para>
         /// <para>DataTable中的列名称自动匹配<see cref="TResult"/>中的属性</para>
         /// <para>当数据量小于100是，请用<see cref="ToListSlowly{TResult}"/></para>
+        /// <para>如果数据类型错误异常<see cref="ArgumentException"/></para>
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="table"></param>
@@ -2055,7 +2056,25 @@ namespace FreshCommonUtility.DataConvert
                 foreach (DataColumn dataColumn in oldColums.Cast<DataColumn>().Where(dataColumn => newColums.Contains(dataColumn.ColumnName)))
                 {
                     flag = true;
-                    dtRow[dataColumn.ColumnName] = dataRow[dataColumn.ColumnName];
+                    try
+                    {
+                        dtRow[dataColumn.ColumnName] = dataRow[dataColumn.ColumnName];
+                    }
+                    catch (ArgumentException argumentException)
+                    {
+                        // ReSharper disable once PossibleIntendedRethrow
+                        var exception =
+                            new ArgumentException(
+                                argumentException.Message + "context data is " +
+                                dataRow.ItemArray.Aggregate(
+                                    (current, temp) => current.ToString() + "," + temp.ToString()), argumentException);
+                        throw exception;
+                    }
+                    catch (Exception exception)
+                    {
+                        // ReSharper disable once PossibleIntendedRethrow
+                        throw exception;
+                    }
                 }
                 if (flag && rowNum == 0)
                 {

@@ -257,6 +257,36 @@ namespace FreshCommonUtilityNetTest
             });
             list.Count.IsEqualTo(_testList.Count);
         }
+
+        /// <summary>
+        /// RecursionTest deep copy test
+        /// </summary>
+        public void DeepCopyRecursionTest()
+        {
+            var tempObj = new TestsTabelToListObject
+            {
+                Age = 10,
+                Name = "k",
+                Height = 20.907,
+                Right = true,
+                Sex = EnumSex.boy,
+                YouLong = new TimeSpan(1, 1, 1, 5),
+                AddressList = new List<string> { "Chongqing", "Beijing", "Shanghai" }
+            };
+            var copyResult = DeepCopyHelper.DeepCopyRecursion(tempObj) as TestsTabelToListObject;
+            new TimeSpan(1, 1, 1, 5).IsEqualTo(copyResult.YouLong);
+            tempObj.AddressList[2] = "TianAnMen";
+            tempObj.AddressList[2].IsNotEqualTo(copyResult.AddressList[2]);
+
+            var list = new List<TestsTabelToListObject>();
+            _testList.ForEach(f =>
+            {
+                var temp = new TestsTabelToListObject();
+                temp = DeepCopyHelper.DeepCopyRecursion(f) as TestsTabelToListObject;
+                list.Add(temp);
+            });
+            list.Count.IsEqualTo(_testList.Count);
+        }
         #endregion
     }
 
@@ -276,6 +306,8 @@ namespace FreshCommonUtilityNetTest
         public TimeSpan YouLong { get; set; }
 
         public bool Right { get; set; }
+
+        public List<string> AddressList { get; set; }
     }
 
     public enum EnumSex

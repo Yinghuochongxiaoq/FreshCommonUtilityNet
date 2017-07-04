@@ -23,8 +23,8 @@ namespace FreshCommonUtilityNetTest
             //SetUp();
             //RunTestSqlServer();
 
-            SetupMySql();
-            RunTestMySql();
+            //SetupMySql();
+            //RunTestMySql();
 
             //SetupSqLite();
             //RunTestsSqLite();

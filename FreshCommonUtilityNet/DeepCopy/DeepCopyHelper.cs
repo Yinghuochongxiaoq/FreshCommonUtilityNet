@@ -404,7 +404,13 @@ namespace FreshCommonUtility.DeepCopy
         #endregion
 
         #region [2、Deep Copy use recursion]
-        private static object DeepCopy(object srcobj)
+
+        /// <summary>
+        /// Recursion DeepCopy object
+        /// </summary>
+        /// <param name="srcobj"></param>
+        /// <returns></returns>
+        public static object DeepCopyRecursion(object srcobj)
         {
             if (srcobj == null)
             {
@@ -437,7 +443,7 @@ namespace FreshCommonUtility.DeepCopy
             else
             {
                 // Try to do deep copy, create a new copied instance  
-                object deepCopiedObj = System.Activator.CreateInstance(srcObjType);
+                object deepCopiedObj = Activator.CreateInstance(srcObjType);
 
                 // Find out all fields or properties, do deep copy  
                 BindingFlags bflags = BindingFlags.DeclaredOnly | BindingFlags.Public
@@ -450,7 +456,7 @@ namespace FreshCommonUtility.DeepCopy
                     {
                         FieldInfo field = (FieldInfo)member;
                         object fieldValue = field.GetValue(srcobj);
-                        field.SetValue(deepCopiedObj, DeepCopy(fieldValue));
+                        field.SetValue(deepCopiedObj, DeepCopyRecursion(fieldValue));
                     }
                     else if (member.MemberType == MemberTypes.Property)
                     {
@@ -459,7 +465,7 @@ namespace FreshCommonUtility.DeepCopy
                         if (info != null)
                         {
                             object propertyValue = property.GetValue(srcobj, null);
-                            property.SetValue(deepCopiedObj, DeepCopy(propertyValue), null);
+                            property.SetValue(deepCopiedObj, DeepCopyRecursion(propertyValue), null);
                         }
                     }
                 }
@@ -468,6 +474,11 @@ namespace FreshCommonUtility.DeepCopy
             }
         }
 
+        /// <summary>
+        /// Deep copy generic
+        /// </summary>
+        /// <param name="srcGeneric"></param>
+        /// <returns></returns>
         private static object DeepCopyGenericType(object srcGeneric)
         {
             try
@@ -484,7 +495,8 @@ namespace FreshCommonUtility.DeepCopy
                 // deep copy each object in List  
                 foreach (object o in srcList)
                 {
-                    dstList.Add(DeepCopy(o));
+                    // ReSharper disable once PossibleNullReferenceException
+                    dstList.Add(DeepCopyRecursion(o));
                 }
 
                 return dstList;
@@ -504,6 +516,7 @@ namespace FreshCommonUtility.DeepCopy
                     // deep copy each object in map  
                     foreach (object o in srcDictionary.Keys)
                     {
+                        // ReSharper disable once PossibleNullReferenceException
                         dstDictionary[o] = srcDictionary[o];
                     }
                     return dstDictionary;
@@ -515,6 +528,11 @@ namespace FreshCommonUtility.DeepCopy
             }
         }
 
+        /// <summary>
+        /// Deep copy array set.
+        /// </summary>
+        /// <param name="srcArray"></param>
+        /// <returns></returns>
         private static Array DeepCopyArray(Array srcArray)
         {
             if (srcArray.Length <= 0)
@@ -526,7 +544,7 @@ namespace FreshCommonUtility.DeepCopy
             // deep copy each object in array  
             for (int i = 0; i < srcArray.Length; i++)
             {
-                object o = DeepCopy(srcArray.GetValue(i));
+                object o = DeepCopyRecursion(srcArray.GetValue(i));
                 arrayCopied.SetValue(o, i);
             }
             return arrayCopied;
