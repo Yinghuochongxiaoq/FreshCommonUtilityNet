@@ -1,17 +1,4 @@
-﻿#region Version Info 1.0
-//-----------------------------------------------------------------------
-// <copyright file="DynamicDataEntity.cs" company="苏州同程网络股份有限公司">
-// Copyright (c) All rights reserved.
-// </copyright>
-// 命名空间：Framework.Utility
-// 文 件 名：DynamicDataEntity
-// 创 建 人：FreshMan
-// 创建时间：2015/11/12 15:38:40
-// 用    途：动态实体类
-//-----------------------------------------------------------------------
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
 
