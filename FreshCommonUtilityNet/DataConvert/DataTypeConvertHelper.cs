@@ -1871,13 +1871,25 @@ namespace FreshCommonUtility.DataConvert
                                 p.SetValue(t, TimeSpan.Parse(value.ToString()), null);
                                 break;
                             default:
-                                p.SetValue(t, value, null);
+                                p.SetValue(t,
+                                    typeof(System.Enum).IsAssignableFrom(p.PropertyType) ? ToInt(value) : value, null);
                                 break;
                         }
                     }
-                    catch (Exception)
+                    catch (ArgumentException argumentException)
                     {
-                        // ignored
+                        // ReSharper disable once PossibleIntendedRethrow
+                        var exception =
+                            new ArgumentException(
+                                argumentException.Message + "context data is " +
+                                dr.ItemArray.Aggregate(
+                                    (current, temp) => current.ToString() + "," + temp.ToString()), argumentException);
+                        throw exception;
+                    }
+                    catch (Exception exception)
+                    {
+                        // ReSharper disable once PossibleIntendedRethrow
+                        throw exception;
                     }
                 }
             }
@@ -2012,13 +2024,25 @@ namespace FreshCommonUtility.DataConvert
                                 p.SetValue(t, TimeSpan.Parse(value.ToString()), null);
                                 break;
                             default:
-                                p.SetValue(t, value, null);
+                                p.SetValue(t,
+                                    typeof(System.Enum).IsAssignableFrom(p.PropertyType) ? ToInt(value) : value, null);
                                 break;
                         }
                     }
-                    catch (Exception)
+                    catch (ArgumentException argumentException)
                     {
-                        // ignored
+                        // ReSharper disable once PossibleIntendedRethrow
+                        var exception =
+                            new ArgumentException(
+                                argumentException.Message + "context data is " +
+                                dataRow.ItemArray.Aggregate(
+                                    (current, temp) => current.ToString() + "," + temp.ToString()), argumentException);
+                        throw exception;
+                    }
+                    catch (Exception exception)
+                    {
+                        // ReSharper disable once PossibleIntendedRethrow
+                        throw exception;
                     }
                 }
                 resulteList.Add(t);
@@ -2103,7 +2127,8 @@ namespace FreshCommonUtility.DataConvert
             //初始化转换对象
             List<TResult> list = new List<TResult>();
             if (table == null || table.Rows.Count < 1) return list;
-            return table.Rows.Count > 100 ? ToListFast<TResult>(table) : ToListSlowly<TResult>(table);
+            //return table.Rows.Count > 100 ? ToListFast<TResult>(table) : ToListSlowly<TResult>(table);
+            return ToListFast<TResult>(table);
         }
         #endregion
         #endregion
