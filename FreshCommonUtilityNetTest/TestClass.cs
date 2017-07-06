@@ -170,7 +170,8 @@ namespace FreshCommonUtilityNetTest
                 Name = "qinxianbo",
                 Right = true,
                 Sex = EnumSex.boy,
-                YouLong = new TimeSpan(1, 1, 1, 1)
+                YouLong = new TimeSpan(1, 1, 1, 1),
+                BrityDay=new DateTime(2017,2,3)
             },
             new TestsTabelToListObject
             {
@@ -179,7 +180,8 @@ namespace FreshCommonUtilityNetTest
                 Name = "秦先波",
                 Right = true,
                 Sex = EnumSex.boy,
-                YouLong = new TimeSpan(1, 1, 1, 2)
+                YouLong = new TimeSpan(1, 1, 1, 2),
+                BrityDay=new DateTime(1994,4,5)
             },
             new TestsTabelToListObject
             {
@@ -188,7 +190,8 @@ namespace FreshCommonUtilityNetTest
                 Name = "qinxianbo",
                 Right = true,
                 Sex = EnumSex.boy,
-                YouLong = new TimeSpan(1, 1, 1, 3)
+                YouLong = new TimeSpan(1, 1, 1, 3),
+                BrityDay=new DateTime(2017,2,23)
             },
             new TestsTabelToListObject
             {
@@ -196,7 +199,8 @@ namespace FreshCommonUtilityNetTest
                 Name = "杨宏俊",
                 Right = true,
                 Sex = EnumSex.grily,
-                YouLong = new TimeSpan(1, 1, 1, 4)
+                YouLong = new TimeSpan(1, 1, 1, 4),
+                BrityDay=new DateTime(1995,6,7)
             },
             new TestsTabelToListObject
             {
@@ -208,7 +212,7 @@ namespace FreshCommonUtilityNetTest
                 YouLong = new TimeSpan(1, 1, 1, 5)
             }
         };
-        public void DataTableToList()
+        public void TableToExcel()
         {
             var table = DataTypeConvertHelper.ToDataTable(_testList);
             var npoi = new NpoiHelper("TestTable.xlsx");
@@ -226,6 +230,14 @@ namespace FreshCommonUtilityNetTest
             //}
             var backListChange = DataTypeConvertHelper.ToList<TestsTabelToListObject>(tableFile);
             _testList.Count.IsEqualTo(backListChange.Count);
+        }
+
+        public void ExcelToTable()
+        {
+            var npoi = new NpoiHelper("TestTable.xlsx");
+            string errorMessage;
+            var tableFile = npoi.ExcelToDataTable(0, true, out errorMessage);
+            var backListChange = DataTypeConvertHelper.ToList<TestsTabelToListObject>(tableFile);
         }
         #endregion
 
@@ -308,6 +320,8 @@ namespace FreshCommonUtilityNetTest
         public bool Right { get; set; }
 
         public List<string> AddressList { get; set; }
+
+        public DateTime BrityDay { get; set; }
     }
 
     public enum EnumSex
