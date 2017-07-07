@@ -2127,8 +2127,7 @@ namespace FreshCommonUtility.DataConvert
             //初始化转换对象
             List<TResult> list = new List<TResult>();
             if (table == null || table.Rows.Count < 1) return list;
-            //return table.Rows.Count > 100 ? ToListFast<TResult>(table) : ToListSlowly<TResult>(table);
-            return ToListFast<TResult>(table);
+            return table.Rows.Count > 1000 ? ToListFast<TResult>(table) : ToListSlowly<TResult>(table);
         }
         #endregion
         #endregion
