@@ -130,7 +130,7 @@ namespace FreshCommonUtilityNetTest
     }
 
 
-    public class Publisher
+    public sealed class Publisher
     {
         private bool isStart = false;
         private Random random = new Random(DateTime.Now.Millisecond);
@@ -162,7 +162,7 @@ namespace FreshCommonUtilityNetTest
 
         public event EventHandler<RandGeneratedEventArgs> RandGenerated;
 
-        protected virtual void OnRandGenerated(int rand)
+        private void OnRandGenerated(int rand)
         {
             RaiseRandGeneratedEvent(rand);
         }

@@ -188,7 +188,7 @@ namespace FreshCommonUtility.Npoi
         public DataTable ExcelToDataTable(string sheetName, bool isFirstRowColumn, out string errorMessage)
         {
             var data = new DataTable();
-            if (string.IsNullOrEmpty(_fileName) || string.IsNullOrEmpty(sheetName))
+            if (string.IsNullOrEmpty(_fileName))
             {
                 errorMessage = "文件不存在或表不存在";
                 return data;
@@ -210,7 +210,7 @@ namespace FreshCommonUtility.Npoi
                 errorMessage = "文件为空";
                 return data;
             }
-            var sheetsIndex = _workbook.GetSheetIndex(sheetName);
+            var sheetsIndex = string.IsNullOrEmpty(sheetName) ? 0 : _workbook.GetSheetIndex(sheetName);
             if (sheetsIndex < 0)
             {
                 errorMessage = "不存在对应工作表";

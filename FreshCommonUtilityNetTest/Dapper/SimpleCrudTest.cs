@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using Dapper;
 using FreshCommonUtility.Dapper;
 using FreshCommonUtility.SqlHelper;
-using FreshCommonUtilityNetTest;
 
-namespace FreshCommonUtilityTests
+namespace FreshCommonUtilityNetTest.Dapper
 {
     /// <summary>
     /// SimpleCrud test class
@@ -1154,11 +1152,20 @@ namespace FreshCommonUtilityTests
             using (var connection = GetOpenConnection())
             {
                 int x = 0;
-                do
+                try
                 {
-                    connection.Insert(new User { Name = "Person " + x, Age = x, CreatedDate = DateTime.Now, ScheduledDayOff = DayOfWeek.Thursday });
-                    x++;
-                } while (x < 10);
+                    do
+                    {
+                        connection.Insert(new User { Name = "Person " + x, Age = x, CreatedDate = DateTime.Now, ScheduledDayOff = DayOfWeek.Thursday });
+                        x++;
+                    } while (x < 10);
+                }
+                catch (Exception exception)
+                {
+                    
+                    throw exception;
+                }
+                
 
                 connection.DeleteList<User>(new { age = 9 });
                 var resultlist = connection.GetList<User>();

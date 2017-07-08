@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using FreshCommonUtility.Dapper;
 
-namespace FreshCommonUtilityTests
+namespace FreshCommonUtilityNetTest.Dapper
 {
     /// <summary>
     /// users Tabel
