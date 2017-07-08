@@ -28,12 +28,31 @@ namespace FreshCommonUtility.Dapper
         /// Default use SQLServer
         /// </summary>
         private static Dialect _dialect = Dialect.SQLServer;
+
+        /// <summary>
+        /// Datatable prefix
+        /// </summary>
         private static string _encapsulation;
+
+        /// <summary>
+        /// Get insert last index
+        /// </summary>
         private static string _getIdentitySql;
+
+        /// <summary>
+        /// Select page data sql
+        /// </summary>
         private static string _getPagedListSql;
 
-        private static readonly IDictionary<Type, string> TableNames = new Dictionary<Type, string>();
-        private static readonly IDictionary<string, string> ColumnNames = new Dictionary<string, string>();
+        /// <summary>
+        /// Tablename cache
+        /// </summary>
+        private static readonly IDictionary<Type, Tuple<string, Dialect>> TableNames = new Dictionary<Type, Tuple<string, Dialect>>();
+
+        /// <summary>
+        /// columnname cache
+        /// </summary>
+        private static readonly IDictionary<string, Tuple<string, Dialect>> ColumnNames = new Dictionary<string, Tuple<string, Dialect>>();
 
         private static ITableNameResolver _tableNameResolver = new TableNameResolver();
         private static IColumnNameResolver _columnNameResolver = new ColumnNameResolver();
@@ -943,26 +962,27 @@ namespace FreshCommonUtility.Dapper
         //Uses class name by default and overrides if the class has a Table attribute
         private static string GetTableName(Type type)
         {
-            string tableName;
-
-            if (TableNames.TryGetValue(type, out tableName))
-                return tableName;
-
-            tableName = _tableNameResolver.ResolveTableName(type);
-            TableNames[type] = tableName;
+            Tuple<string, Dialect> tempTableName;
+            if (TableNames.TryGetValue(type, out tempTableName))
+            {
+                if (tempTableName.Item2 == _dialect) return tempTableName.Item1;
+            }
+            var tableName = _tableNameResolver.ResolveTableName(type);
+            TableNames[type] = new Tuple<string, Dialect>(tableName, _dialect);
 
             return tableName;
         }
 
         private static string GetColumnName(PropertyInfo propertyInfo)
         {
-            string columnName, key = string.Format("{0}.{1}", propertyInfo.DeclaringType, propertyInfo.Name);
-
-            if (ColumnNames.TryGetValue(key, out columnName))
-                return columnName;
-
-            columnName = _columnNameResolver.ResolveColumnName(propertyInfo);
-            ColumnNames[key] = columnName;
+            string key = string.Format("{0}.{1}", propertyInfo.DeclaringType, propertyInfo.Name);
+            Tuple<string, Dialect> tempColumn;
+            if (ColumnNames.TryGetValue(key, out tempColumn))
+            {
+                if (tempColumn.Item2 == _dialect) return tempColumn.Item1;
+            }
+            var columnName = _columnNameResolver.ResolveColumnName(propertyInfo);
+            ColumnNames[key] = new Tuple<string, Dialect>(columnName, _dialect);
 
             return columnName;
         }
@@ -1013,7 +1033,7 @@ namespace FreshCommonUtility.Dapper
             /// <summary>
             /// SQLite
             /// </summary>
-            SQLite=3,
+            SQLite = 3,
         }
 
         /// <summary>
