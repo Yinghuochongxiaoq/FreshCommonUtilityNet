@@ -53,6 +53,17 @@ namespace FreshCommonUtility.RegExp
         }
 
         /// <summary>
+        /// 是否是负整数
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static bool IsLeftZeroNumeric(string s)
+        {
+            string text1 = @"^\-+[0-9]+$";
+            return Regex.IsMatch(s, text1);
+        }
+
+        /// <summary>
         /// 是否绝对路径
         /// </summary>
         /// <param name="s"></param>

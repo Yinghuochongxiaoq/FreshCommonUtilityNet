@@ -96,6 +96,7 @@
     <Compile Include="Enum\PersonTimeState.cs" />
     <Compile Include="Enum\PersonTimeType.cs" />
     <Compile Include="ExcelHelper\ExcelHelperTests.cs" />
+    <Compile Include="ExpandMath\BigIntTest.cs" />
     <Compile Include="Model\PersonGattScheduleInfoDto.cs" />
     <Compile Include="Model\TestsTabelToListObject.cs" />
     <Compile Include="Program.cs" />

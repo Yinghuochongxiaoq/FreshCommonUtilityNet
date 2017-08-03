@@ -139,6 +139,7 @@
     <Compile Include="Enum\EnumHelper.cs" />
     <Compile Include="Image\ImageHelper.cs" />
     <Compile Include="Map\FastMapHelper.cs" />
+    <Compile Include="ExpandMath\BigInt.cs" />
     <Compile Include="Npoi\NpoiHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegExp\RegExp.cs" />

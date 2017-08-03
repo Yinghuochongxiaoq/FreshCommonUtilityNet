@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
+using FreshCommonUtility.RegExp;
 using FreshCommonUtilityNetTest.Dapper;
 using FreshCommonUtilityNetTest.DataConvert;
 using FreshCommonUtilityNetTest.DeepCopy;
 using FreshCommonUtilityNetTest.Enumber;
 using FreshCommonUtilityNetTest.ExcelHelper;
+using FreshCommonUtilityNetTest.ExpandMath;
 using FreshCommonUtilityNetTest.Security;
 using FreshCommonUtilityNetTest.Zip;
 
@@ -30,7 +33,8 @@ namespace FreshCommonUtilityNetTest
                 typeof(ZipHelperTests),
                 typeof(DapperSqlServerTest),
                 typeof(DapperMySqlTest),
-                typeof(DapperSqliteTest)
+                typeof(DapperSqliteTest),
+                typeof(BigIntTest)
             };
 
             var stopwatch = Stopwatch.StartNew();
