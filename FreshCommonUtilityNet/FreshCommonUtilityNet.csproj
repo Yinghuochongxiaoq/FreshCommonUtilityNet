@@ -136,6 +136,7 @@
     <Compile Include="DataConvert\DataTypeConvertHelper.cs" />
     <Compile Include="DeepCopy\DeepCopyHelper.cs" />
     <Compile Include="Dynamic\DynamicDataEntity.cs" />
+    <Compile Include="Email\EmailHelper.cs" />
     <Compile Include="Enum\EnumHelper.cs" />
     <Compile Include="Image\ImageHelper.cs" />
     <Compile Include="Map\FastMapHelper.cs" />

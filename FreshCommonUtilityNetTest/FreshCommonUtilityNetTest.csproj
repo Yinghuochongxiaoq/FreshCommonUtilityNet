@@ -88,6 +88,7 @@
     <Compile Include="Dapper\DtoClasses.cs" />
     <Compile Include="DataConvert\DataTypeConvertHelperTests.cs" />
     <Compile Include="DeepCopy\DeepCopyHelperTests.cs" />
+    <Compile Include="Email\EmailHelperTest.cs" />
     <Compile Include="EmitLearn.cs" />
     <Compile Include="Enumber\EnumberHelperTests.cs" />
     <Compile Include="Enum\AuthEnum.cs" />
