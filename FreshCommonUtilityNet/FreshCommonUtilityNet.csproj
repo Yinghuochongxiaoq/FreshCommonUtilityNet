@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\FreshCommonUtilityNet.XML</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -118,6 +121,7 @@
   <ItemGroup>
     <Compile Include="Cache\RedisCacheHelper.cs" />
     <Compile Include="Cache\RedisConnectionHelper.cs" />
+    <Compile Include="CommonModel\ReferencedModel.cs" />
     <Compile Include="Configure\AppConfigurationHelper.cs" />
     <Compile Include="Cookie\CookieHelper.cs" />
     <Compile Include="Dapper\ColumnAttribute.cs" />
@@ -148,6 +152,7 @@
     <Compile Include="Security\IDCardValidatorHelper.cs" />
     <Compile Include="Security\RandomHelper.cs" />
     <Compile Include="Security\AesHelper.cs" />
+    <Compile Include="SqlHelper\MsSqlHelper.cs" />
     <Compile Include="SqlHelper\SqlConnectionHelper.cs" />
     <Compile Include="SqlHelper\SqlHelper.cs" />
     <Compile Include="Web\FilterHTMLHelper.cs" />
