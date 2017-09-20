@@ -38,6 +38,21 @@ namespace FreshCommonUtilityNetTest.DeepCopy
                 YouLong = new TimeSpan(1, 1, 1, 5),
                 AddressList = new List<string> { "FreshMan.com", "China.Chongqing" }
             };
+
+            var child = new Model.TestsTabelToListObject
+            {
+                Age = 1,
+                Name = "T",
+                Height = 30,
+                Right = true,
+                Sex = Enum.EnumSex.Grily,
+                YouLong = new TimeSpan(1, 1, 1, 5),
+                AddressList = new List<string> { "Hongjun.com", "China.Chongqing" },
+                ParentObject = tempObj
+            };
+
+            tempObj.ChildObject = child;
+
             var copyResult = tempObj.DeepCopy();
             Debug.Assert(copyResult != null);
             new TimeSpan(1, 1, 1, 5).IsEqualTo(copyResult.YouLong);

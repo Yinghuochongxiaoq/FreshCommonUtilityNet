@@ -23,5 +23,9 @@ namespace FreshCommonUtilityNetTest.Model
         public List<string> AddressList { get; set; }
 
         public DateTime BrityDay { get; set; }
+
+        public TestsTabelToListObject ParentObject { get; set; }
+
+        public TestsTabelToListObject ChildObject { get; set; }
     }
 }
