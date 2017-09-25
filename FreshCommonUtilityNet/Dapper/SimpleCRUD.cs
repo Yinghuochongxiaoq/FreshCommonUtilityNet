@@ -175,7 +175,6 @@ namespace FreshCommonUtility.Dapper
 
             if (Debugger.IsAttached)
                 Trace.WriteLine(string.Format("Get<{0}>: {1} with Id: {2}", currenttype, sb, id));
-
             return connection.Query<T>(sb.ToString(), dynParms, transaction, true, commandTimeout).FirstOrDefault();
         }
 

@@ -121,6 +121,7 @@
   <ItemGroup>
     <Compile Include="Cache\RedisCacheHelper.cs" />
     <Compile Include="Cache\RedisConnectionHelper.cs" />
+    <Compile Include="CommonModel\ReferencedForeighKeyModel.cs" />
     <Compile Include="CommonModel\ReferencedModel.cs" />
     <Compile Include="Configure\AppConfigurationHelper.cs" />
     <Compile Include="Cookie\CookieHelper.cs" />
@@ -130,11 +131,13 @@
     <Compile Include="Dapper\IgnoreSelectAttribute.cs" />
     <Compile Include="Dapper\IgnoreUpdateAttribute.cs" />
     <Compile Include="Dapper\KeyAttribute.cs" />
+    <Compile Include="Dapper\MySqlPart.cs" />
     <Compile Include="Dapper\NotMappedAttribute.cs" />
     <Compile Include="Dapper\ReadOnlyAttribute.cs" />
     <Compile Include="Dapper\RequiredAttribute.cs" />
     <Compile Include="Dapper\SimpleCRUD.cs" />
     <Compile Include="Dapper\SimpleCRUDAsync.cs" />
+    <Compile Include="Dapper\SQLServerPart.cs" />
     <Compile Include="Dapper\TableAttribute.cs" />
     <Compile Include="Dapper\TypeExtension.cs" />
     <Compile Include="DataConvert\DataTypeConvertHelper.cs" />
