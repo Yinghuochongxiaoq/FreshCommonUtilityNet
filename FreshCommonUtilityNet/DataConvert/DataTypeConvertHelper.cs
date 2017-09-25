@@ -2223,7 +2223,7 @@ namespace FreshCommonUtility.DataConvert
         /// <param name="source">原实体</param>
         /// <param name="target">目的实体</param>
         /// <returns>不同内容描述</returns>
-        internal static string GetEntityDifference<T>(T source, T target)
+        public static string GetEntityDifference<T>(T source, T target)
         {
             if (source != null && target != null)
             {
