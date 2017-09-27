@@ -55,6 +55,8 @@ namespace FreshCommonUtilityNetTest.Dapper
                 connection.Execute(@" CREATE TABLE GUIDTest(Id CHAR(38) NOT NULL,name varchar(50) NOT NULL, CONSTRAINT PK_GUIDTest PRIMARY KEY (Id ASC))");
                 connection.Execute(@" create table StrangeColumnNames (ItemId INTEGER PRIMARY KEY AUTO_INCREMENT, word nvarchar(100) not null, colstringstrangeword nvarchar(100) not null, KeywordedProperty nvarchar(100) null) ");
                 connection.Execute(@" create table UserWithoutAutoIdentity (Id INTEGER PRIMARY KEY, Name nvarchar(100) not null, Age int not null) ");
+                connection.Execute(
+                    @" CREATE TABLE Test(Id INTEGER PRIMARY KEY AUTO_INCREMENT ,Name nvarchar(100) NULL ) ");
                 connection.Close();
             }
 

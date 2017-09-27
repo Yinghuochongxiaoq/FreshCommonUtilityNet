@@ -46,6 +46,8 @@ namespace FreshCommonUtilityNetTest.Dapper
                 connection.Execute(@" create table UserWithoutAutoIdentity (Id INTEGER PRIMARY KEY, Name nvarchar(100) not null, Age int not null) ");
                 connection.Execute(@" create table IgnoreColumns (Id INTEGER PRIMARY KEY AUTOINCREMENT, IgnoreInsert nvarchar(100) null, IgnoreUpdate nvarchar(100) null, IgnoreSelect nvarchar(100)  null, IgnoreAll nvarchar(100) null) ");
                 connection.Execute(@" CREATE TABLE KeyMaster (Key1 INTEGER NOT NULL, Key2 INTEGER NOT NULL, PRIMARY KEY ([Key1], [Key2]))");
+                connection.Execute(
+                    @" CREATE TABLE Test (Id INTEGER PRIMARY KEY AUTOINCREMENT,Name nvarchar(100) NULL ) ");
 
             }
         }

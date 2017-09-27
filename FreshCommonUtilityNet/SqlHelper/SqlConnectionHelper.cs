@@ -20,16 +20,6 @@ namespace FreshCommonUtility.SqlHelper
         private static string ConnectionString { get; set; }
 
         /// <summary>
-        /// Return connection object.
-        /// </summary>
-        private static MySqlConnection _conn;
-
-        /// <summary>
-        /// Lock resource
-        /// </summary>
-        private static readonly object SyncRoot = new object();
-
-        /// <summary>
         /// cut put point.
         /// </summary>
         static SqlConnectionHelper()
@@ -44,21 +34,11 @@ namespace FreshCommonUtility.SqlHelper
         /// <returns></returns>
         public static MySqlConnection GetMySqlConnectionConnection(string connectionString = null)
         {
-            if (!string.IsNullOrEmpty(connectionString) && connectionString.GetHashCode() != ConnectionString.GetHashCode())
+            if (!string.IsNullOrEmpty(connectionString))
             {
-                _conn = new MySqlConnection(connectionString);
+                return new MySqlConnection(connectionString);
             }
-            if (_conn == null)
-            {
-                lock (SyncRoot)
-                {
-                    if (_conn == null)
-                    {
-                        _conn = new MySqlConnection(ConnectionString);
-                    }
-                }
-            }
-            return _conn;
+            return new MySqlConnection(ConnectionString);
         }
 
         /// <summary>
