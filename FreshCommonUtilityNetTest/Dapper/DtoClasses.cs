@@ -148,4 +148,12 @@ namespace FreshCommonUtilityNetTest.Dapper
         [Key, Required]
         public int Key2 { get; set; }
     }
+
+    public class Test
+    {
+        [Key]
+        public int Id { get; set; }
+        [Column("name")]
+        public string Name { get; set; }
+    }
 }

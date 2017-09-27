@@ -2678,6 +2678,10 @@ namespace FreshCommonUtility.DataConvert
                 il.Emit(OpCodes.Ret);
             }
 
+            /// <summary>
+            /// Deal difference IL
+            /// </summary>
+            /// <returns></returns>
             private static GetEntityDifferenceMethod<T> InternalGetGetEntityDifferenceInvoker()
             {
                 Type type = TypeInfo;
@@ -2695,6 +2699,10 @@ namespace FreshCommonUtility.DataConvert
                 return (GetEntityDifferenceMethod<T>)method.CreateDelegate(typeof(GetEntityDifferenceMethod<T>));
             }
 
+            /// <summary>
+            /// Deal difference IL
+            /// </summary>
+            /// <param name="il"></param>
             private static void InternalGeneratorGetEntityDifferenceInvoker(ILGenerator il)
             {
                 string format = "{0}：“{1}”==>“{2}”|";

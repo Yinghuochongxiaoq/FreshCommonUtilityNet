@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using Dapper;
 using FreshCommonUtility.Dapper;
 using FreshCommonUtility.SqlHelper;
@@ -1162,10 +1163,10 @@ namespace FreshCommonUtilityNetTest.Dapper
                 }
                 catch (Exception exception)
                 {
-                    
+
                     throw exception;
                 }
-                
+
 
                 connection.DeleteList<User>(new { age = 9 });
                 var resultlist = connection.GetList<User>();
@@ -1373,6 +1374,33 @@ namespace FreshCommonUtilityNetTest.Dapper
                 allColumnDapper.IgnoreAll.IsNull();
 
                 connection.Delete<IgnoreColumns>(itemId);
+            }
+        }
+
+        /// <summary>
+        /// multithreading test
+        /// </summary>
+        public void TestMultithreading()
+        {
+            List<Test> list = new List<Test>();
+            for (int i = 0; i < 1000; i++)
+            {
+                list.Add(new Test { Name = i.ToString() });
+            }
+            var query = list.AsParallel();
+
+            Parallel.ForEach(query, InsertMultithreading);
+        }
+
+        /// <summary>
+        /// insert into multithreading
+        /// </summary>
+        /// <param name="testModelTest"></param>
+        private void InsertMultithreading(Test testModelTest)
+        {
+            using (var connection = GetOpenConnection())
+            {
+                connection.Insert(testModelTest);
             }
         }
     }
