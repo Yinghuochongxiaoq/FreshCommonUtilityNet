@@ -2054,7 +2054,6 @@ namespace FreshCommonUtility.DataConvert
         #region [3.1.3 比较快的方法]
         /// <summary>
         /// <para>表格转集合</para>
-        /// <para>DataTable中的列名称自动匹配<see cref="TResult"/>中的属性</para>
         /// <para>当数据量小于100是，请用<see cref="ToListSlowly{TResult}"/></para>
         /// <para>如果数据类型错误异常<see cref="ArgumentException"/></para>
         /// </summary>
@@ -2230,6 +2229,29 @@ namespace FreshCommonUtility.DataConvert
                 return EntityUtilCache<T>.GetEntityDifferenceInvoker(source, target);
             }
             return "";
+        }
+
+        /// <summary>
+        /// get data reader values of column
+        /// </summary>
+        /// <param name="dataReader">interface dataTeader</param>
+        /// <param name="name">column name</param>
+        /// <param name="type">data type</param>
+        /// <returns></returns>
+        // ReSharper disable once UnusedMember.Local
+        private static object SecureReaderGetValue(IDataReader dataReader, string name, Type type)
+        {
+            if (dataReader == null || string.IsNullOrEmpty(name)) return null;
+            var schemaTable = dataReader.GetSchemaTable();
+            if (schemaTable == null) return null;
+            schemaTable.DefaultView.RowFilter = "ColumnName= '" + name + "'";
+            if (schemaTable.DefaultView.Count < 1) return null;
+            var obj = dataReader[name];
+            if (typeof(System.Enum).IsAssignableFrom(type))
+            {
+                return System.Enum.Parse(type, obj.ToString());
+            }
+            return obj;
         }
         #endregion
 
@@ -2564,6 +2586,10 @@ namespace FreshCommonUtility.DataConvert
             }
         }
 
+        /// <summary>
+        /// entity util cache class
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         private static class EntityUtilCache<T>
         {
             // ReSharper disable once StaticMemberInGenericType
@@ -2589,22 +2615,30 @@ namespace FreshCommonUtility.DataConvert
                 PropList = null;
             }
 
+            /// <summary>
+            /// Get emit invoker delegate.
+            /// </summary>
+            /// <returns></returns>
             private static SetPropertyValueInvoker<T> InternalGetEmitInvoker()
             {
                 Type type = TypeInfo;
-
                 Type ownerType = type.IsInterface ? typeof(object) : type;
+#pragma warning disable 618
                 bool canSkipChecks = SecurityManager.IsGranted(new ReflectionPermission(ReflectionPermissionFlag.MemberAccess));
+#pragma warning restore 618
                 DynamicMethod method = new DynamicMethod("SetPropertyValueInvoker", type,
                     new[] { type, typeof(IDataReader) }, ownerType, canSkipChecks);
 
                 ILGenerator il = method.GetILGenerator();
 
                 InternalGeneratorEmitInvoker(il);
-
                 return (SetPropertyValueInvoker<T>)method.CreateDelegate(typeof(SetPropertyValueInvoker<T>));
             }
 
+            /// <summary>
+            /// Make dynamic method
+            /// </summary>
+            /// <param name="il"></param>
             private static void InternalGeneratorEmitInvoker(ILGenerator il)
             {
                 Type type = TypeInfo;
@@ -2621,7 +2655,6 @@ namespace FreshCommonUtility.DataConvert
                 il.Emit(OpCodes.Stloc, o);
                 il.MarkLabel(lbl);
                 LocalBuilder val = il.DeclareLocal(typeof(object));
-
                 int n = propInfoArr.Length;
                 for (int i = 0; i < n; i++)
                 {
@@ -2633,6 +2666,7 @@ namespace FreshCommonUtility.DataConvert
 
                     il.Emit(OpCodes.Ldarg_1);
                     il.Emit(OpCodes.Ldstr, propInfo.Name);
+                    il.Emit(OpCodes.Ldtoken, propInfo.PropertyType);
                     il.Emit(OpCodes.Call, SecureReaderGetValueMethod);
                     il.Emit(OpCodes.Stloc, val);
                     il.Emit(OpCodes.Ldloc, val);
@@ -2663,7 +2697,7 @@ namespace FreshCommonUtility.DataConvert
                     il.BeginCatchBlock(typeof(Exception));
                     LocalBuilder e = il.DeclareLocal(typeof(Exception));
                     il.Emit(OpCodes.Stloc, e);
-                    il.Emit(OpCodes.Ldstr, "[" + propInfo.Name + "]属性赋值出现错误。");
+                    il.Emit(OpCodes.Ldstr, "[" + propInfo.Name + "] Property assignment errors.");
                     il.Emit(OpCodes.Ldloc, e);
                     il.Emit(OpCodes.Callvirt, GetMessageMethod);
                     il.Emit(OpCodes.Call, ConcatMethod);
@@ -2688,7 +2722,9 @@ namespace FreshCommonUtility.DataConvert
 
                 Type ownerType = type.IsInterface ? typeof(object) : type;
                 bool canSkipChecks =
+#pragma warning disable 618
                     SecurityManager.IsGranted(new ReflectionPermission(ReflectionPermissionFlag.MemberAccess));
+#pragma warning restore 618
                 DynamicMethod method = new DynamicMethod("GetEntityDifference", typeof(string),
                                                          new[] { type, type }, ownerType, canSkipChecks);
 
@@ -2730,7 +2766,8 @@ namespace FreshCommonUtility.DataConvert
                         Label label4 = il.DefineLabel();
                         Label label5 = il.DefineLabel();
 
-                        MethodInfo getMethodHasValue = pi.PropertyType.GetProperty("HasValue").GetGetMethod();
+                        MethodInfo getMethodHasValue = pi.PropertyType.GetProperty("HasValue")?.GetGetMethod();
+                        if (getMethodHasValue == null) continue;
                         MethodInfo methodGetValueOrDefault = pi.PropertyType.GetMethod("GetValueOrDefault", new Type[] { });
 
                         il.Emit(OpCodes.Ldarg_0);
@@ -2831,8 +2868,10 @@ namespace FreshCommonUtility.DataConvert
 
         private static class FastMapper<TTarget, TSource>
         {
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             internal static readonly MapReturnMethod<TTarget, TSource> MapReturnMethod;
 
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             internal static readonly MapMethod<TTarget, TSource> MapMethod;
 
             static FastMapper()
@@ -2844,7 +2883,9 @@ namespace FreshCommonUtility.DataConvert
             private static MapReturnMethod<TTarget, TSource> CreateMapReturnMethod(Type targetType, Type sourceType)
             {
                 Type ownerType = targetType.IsInterface ? typeof(object) : targetType;
+#pragma warning disable 618
                 bool canSkipChecks = SecurityManager.IsGranted(new ReflectionPermission(ReflectionPermissionFlag.MemberAccess));
+#pragma warning restore 618
                 DynamicMethod map = new DynamicMethod("MapReturn", targetType, new[] { sourceType }, ownerType, canSkipChecks);
 
                 ILGenerator il = map.GetILGenerator();
@@ -2883,7 +2924,9 @@ namespace FreshCommonUtility.DataConvert
             {
                 Type ownerType = targetType.IsInterface ? typeof(object) : targetType;
 
+#pragma warning disable 618
                 bool canSkipChecks = SecurityManager.IsGranted(new ReflectionPermission(ReflectionPermissionFlag.MemberAccess));
+#pragma warning restore 618
                 DynamicMethod map = new DynamicMethod("Map", null, new[] { targetType, sourceType }, ownerType, canSkipChecks);
 
                 ILGenerator il = map.GetILGenerator();
@@ -2988,8 +3031,9 @@ namespace FreshCommonUtility.DataConvert
         {
             return _handler(dataRecord);
         }
+
         /// <summary>
-        /// 
+        /// Create builder method.
         /// </summary>
         /// <param name="dataRecord"></param>
         /// <returns></returns>

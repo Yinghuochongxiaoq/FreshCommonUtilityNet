@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using Dapper;
 using FreshCommonUtility.Dapper;
-using FreshCommonUtility.SqlHelper;
 using FreshCommonUtilityNetTest.Dapper;
 using FreshCommonUtilityNetTest.DataConvert;
 using FreshCommonUtilityNetTest.DeepCopy;
@@ -56,14 +53,16 @@ namespace FreshCommonUtilityNetTest
             stopwatch.Stop();
             Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
 
-            //EmitLearn.LearnInfo();
+            EmitLearn.LearnInfo();
+            ExpressionLear.LearnInfo();
             Console.ReadKey();
         }
 
         public class Contact
         {
             [Key]
-            public int ContactID { get; set; }
+            [Column("ContactID")]
+            public int ContactId { get; set; }
             public string ContactName { get; set; }
             public IEnumerable<Phone> Phones { get; set; }
         }
@@ -72,7 +71,9 @@ namespace FreshCommonUtilityNetTest
         {
             [Key]
             public int PhoneId { get; set; }
-            public int ContactID { get; set; }
+
+            [Column("ContactID")]
+            public int ContactId { get; set; }
 
             public string Number { get; set; }
 
@@ -81,7 +82,7 @@ namespace FreshCommonUtilityNetTest
 
         public static void SaveInfo()
         {
-            var phone = new Phone { Number = "1234567788",IsActive = 1};
+            var phone = new Phone { Number = "1234567788", IsActive = 1 };
 
             var contact = new Contact { ContactName = "MMP" };
             using (
@@ -90,8 +91,8 @@ namespace FreshCommonUtilityNetTest
                         "data source=192.168.8.210;user id=sa;password=Evget123456789;initial catalog=ASPDataZZ19;Persist Security Info=true;")
                 )
             {
-                var i = conn.Insert(contact);
-                phone.ContactID = contact.ContactID;
+                conn.Insert(contact);
+                phone.ContactId = contact.ContactId;
                 conn.Insert(phone);
             }
         }
@@ -109,10 +110,10 @@ SELECT * FROM Phone where ContactId in (select t.ContactId from @t t)";
             using (var conn = new SqlConnection("data source=192.168.8.210;user id=sa;password=Evget123456789;initial catalog=ASPDataZZ19;Persist Security Info=true;"))
             {
                 conn.Open();
-                var mapped = conn.QueryMultiple(sql, null, null).Map<Contact, Phone, int>
+                var mapped = conn.QueryMultiple(sql).Map<Contact, Phone, int>
         (
-           contact => contact.ContactID,
-           phone => phone.ContactID,
+           contact => contact.ContactId,
+           phone => phone.ContactId,
            (contact, phones) => { contact.Phones = phones; }
         );
 
