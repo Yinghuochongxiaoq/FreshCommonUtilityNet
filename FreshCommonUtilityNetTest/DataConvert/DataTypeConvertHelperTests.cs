@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using FreshCommonUtility.DataConvert;
 using FreshCommonUtility.Npoi;
 using FreshCommonUtilityNetTest.Model;
@@ -86,7 +88,7 @@ namespace FreshCommonUtilityNetTest.DataConvert
         }
 
         /// <summary>
-        /// 汉子转拼音
+        /// Chinese to Pinyin
         /// </summary>
         public void GetFullPinyinTest()
         {
@@ -99,7 +101,7 @@ namespace FreshCommonUtilityNetTest.DataConvert
         }
 
         /// <summary>
-        /// 数值换为汉字
+        /// number to Chinese
         /// </summary>
         public void ToChineseTest()
         {
@@ -110,6 +112,50 @@ namespace FreshCommonUtilityNetTest.DataConvert
             resulteInfo.IsEqualTo(numberChine);
             resulteInfo = DataTypeConvertHelper.ToChinese(number, true);
             resulteInfo.IsEqualTo(numberOld);
+        }
+
+        /// <summary>
+        /// Get entity difference 
+        /// </summary>
+        public void GetEntityDifference()
+        {
+            var one = new TestsTabelToListObject
+            {
+                Age = 10,
+                Name = "k",
+                Height = 20.907,
+                Right = true,
+                Sex = Enum.EnumSex.Boy,
+                YouLong = new TimeSpan(1, 1, 1, 5)
+            };
+
+            var two = new TestsTabelToListObject
+            {
+                Age = 100,
+                Name = "k",
+                Height = 20.907,
+                Right = true,
+                Sex = Enum.EnumSex.Boy,
+                YouLong = new TimeSpan(1, 1, 1, 5)
+            };
+            var differenceStr = DataTypeConvertHelper.GetEntityDifference(one, two);
+            var resulte = "Age：“10”==>“100”|";
+            differenceStr.IsEqualTo(resulte);
+        }
+
+        /// <summary>
+        /// IDataReader to entity list.
+        /// </summary>
+        public void ToEntityTest()
+        {
+            var filePath = "..\\..\\TestUseFile\\TestExport.xlsx";
+            var excelHelperTwo = new NpoiHelper(filePath);
+            string message;
+            var tableTwo = excelHelperTwo.ExcelToDataTable(null, true, out message);
+            IDataReader dr = tableTwo.CreateDataReader();
+            List<PersonGattScheduleInfoDto> tableToList =
+                DataTypeConvertHelper.ToList<PersonGattScheduleInfoDto>(dr);
+            tableTwo.Rows.Count.IsEqualTo(tableToList.Count);
         }
     }
 }
