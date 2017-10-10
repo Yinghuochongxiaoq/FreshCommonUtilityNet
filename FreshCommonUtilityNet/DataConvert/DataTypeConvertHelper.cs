@@ -2959,7 +2959,7 @@ namespace FreshCommonUtility.DataConvert
     }
 
     /// <summary>
-    /// 字符格式化特性
+    /// Char format attribute
     /// </summary>
     public class FormatAttribute : Attribute
     {
@@ -2979,7 +2979,7 @@ namespace FreshCommonUtility.DataConvert
     }
 
     /// <summary>
-    /// 不参与差异比较的数据实体属性    
+    /// non join compare difference attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class NonCompareDifferenceAttribute : Attribute
@@ -2987,7 +2987,7 @@ namespace FreshCommonUtility.DataConvert
     }
 
     /// <summary>
-    /// 字段别名特性
+    /// Field name attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class FieldNameAttribute : Attribute
@@ -3008,7 +3008,7 @@ namespace FreshCommonUtility.DataConvert
     }
 
     /// <summary>
-    /// 创建转换的委托
+    /// Create change delegate
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     public class DataTableEntityBuilder<TEntity>

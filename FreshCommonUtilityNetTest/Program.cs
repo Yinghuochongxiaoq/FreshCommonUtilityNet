@@ -53,8 +53,8 @@ namespace FreshCommonUtilityNetTest
             stopwatch.Stop();
             Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
 
-            EmitLearn.LearnInfo();
-            ExpressionLear.LearnInfo();
+            //EmitLearn.LearnInfo();
+            //ExpressionLear.LearnInfo();
             Console.ReadKey();
         }
 
