@@ -12,7 +12,7 @@ namespace FreshCommonUtility.Dapper
     /// <summary>
     /// MySql part
     /// </summary>
-    public static class MySqlPart
+    public class MySqlPart : IDealMoreOtherPart
     {
         #region [1、Get disabled foreign key sql]
 
@@ -20,7 +20,7 @@ namespace FreshCommonUtility.Dapper
         /// Get disabled foreign key sql
         /// </summary>
         /// <returns></returns>
-        public static string GetDisabledForeignKeySql(this IDbConnection connection)
+        public string GetDisabledForeignKeySql(IDbConnection connection)
         {
             return @"SET FOREIGN_KEY_CHECKS=0;";
         }
@@ -33,7 +33,7 @@ namespace FreshCommonUtility.Dapper
         /// Get enabled foreign key sql
         /// </summary>
         /// <returns></returns>
-        public static string GetEnabledForeignKeySql(this IDbConnection connection)
+        public string GetEnabledForeignKeySql(IDbConnection connection)
         {
             return @"SET FOREIGN_KEY_CHECKS=1;";
         }
@@ -46,7 +46,7 @@ namespace FreshCommonUtility.Dapper
         /// Get delete foreign key sql
         /// </summary>
         /// <returns></returns>
-        public static string GetDeleteForeignKeySql(this IDbConnection connection)
+        public string GetDeleteForeignKeySql(IDbConnection connection)
         {
             var disableSql = @"SELECT CONCAT('alter table ' , o.TABLE_NAME , ' drop foreign key ' , o.CONSTRAINT_NAME , ';') as ForeighKey
 FROM
@@ -63,7 +63,7 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
         /// Get recreat foreign key sql
         /// </summary>
         /// <returns></returns>
-        public static string GetReCreatForeignKeySql(this IDbConnection connection)
+        public string GetReCreatForeignKeySql(IDbConnection connection)
         {
             var disableSql = @"SELECT CONCAT('alter table ' , o.TABLE_NAME , ' ADD CONSTRAINT ' , o.CONSTRAINT_NAME , ' foreign key(',o.COLUMN_NAME,') REFERENCES ',o.REFERENCED_TABLE_NAME,'(',o.REFERENCED_COLUMN_NAME,');') as ForeighKey
 FROM
@@ -78,7 +78,7 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
         /// <summary>
         /// Save table refenced model dictionary
         /// </summary>
-        private static readonly Dictionary<string, List<string>> TableRefencedModelDictionary = new Dictionary<string, List<string>>();
+        private readonly Dictionary<string, List<string>> _tableRefencedModelDictionary = new Dictionary<string, List<string>>();
 
         /// <summary>
         /// Delete or drop table by name of table or view.
@@ -90,22 +90,23 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>delete or drop table or view sql command</returns>
-        private static string GetDeleteOrDropDataTableSqlByName(List<string> tableNameList, string dataBase, bool isView, int type)
+        // ReSharper disable once UnusedParameter.Local
+        private string GetDeleteOrDropDataTableSqlByName(List<string> tableNameList, string dataBase, bool isView, int type)
         {
             if (tableNameList == null || tableNameList.Count < 1) return string.Empty;
             var hadDeleteTable = new Dictionary<string, int>();
             var historyDictionary = new Dictionary<string, int>();
             StringBuilder resulteBuilder = new StringBuilder();
-            var typeSql = type == 1 ? " DELETE FROM " : (type == 0 ? " DROP TABLE " : string.Empty);
+            var typeSql = type == 1 ? " DELETE FROM " : (type == 0 ? " DROP TABLE IF EXISTS" : string.Empty);
             foreach (var tableName in tableNameList.Distinct().Where(tableName => !string.IsNullOrEmpty(tableName)))
             {
                 if (historyDictionary.ContainsKey(tableName)) continue;
                 var referencedTableList = GetDeleteTableNameList(tableName, historyDictionary);
                 if (!string.IsNullOrEmpty(dataBase))
                 {
-                    dataBase = dataBase + ".dbo.";
+                    dataBase = dataBase + ".";
                 }
-                string itemDeleteSql = ";IF EXISTS ( SELECT * FROM " + dataBase + " sysobjects WHERE name = '{0}' AND type = '" + (isView ? "V" : "U") + "') " + typeSql + dataBase + "[{0}] ;";
+                string itemDeleteSql = typeSql + dataBase + "{0} ;";
                 if (referencedTableList == null || referencedTableList.Count < 1) continue;
                 foreach (var tempString in referencedTableList)
                 {
@@ -127,9 +128,9 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
         /// Citation Graph
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
-        /// </summary>        private static Dictionary<string, List<string>> GetReferencedMap()
+        /// </summary>        private Dictionary<string, List<string>> GetReferencedMap()
         {
-            if (TableRefencedModelDictionary.Any()) return TableRefencedModelDictionary;
+            if (_tableRefencedModelDictionary.Any()) return _tableRefencedModelDictionary;
             string sqlCmd = $@"SELECT
 	CONSTRAINT_NAME as ForeignKey,
 	COLUMN_NAME as ForeignKeyCell,
@@ -158,17 +159,17 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
                     TableName = (string)dr["TableName"]
                 };
                 resulteInfo.Add(tempModel);
-                if (TableRefencedModelDictionary.ContainsKey(tempModel.ReferencedTableName)) continue;
-                TableRefencedModelDictionary.Add(tempModel.ReferencedTableName, new List<string>());
+                if (_tableRefencedModelDictionary.ContainsKey(tempModel.ReferencedTableName)) continue;
+                _tableRefencedModelDictionary.Add(tempModel.ReferencedTableName, new List<string>());
             }
             dr.Close();
 
             //oriented graph
             foreach (var rowModel in resulteInfo.Where(rowModel => rowModel.ReferencedTableName != rowModel.TableName))
             {
-                TableRefencedModelDictionary[rowModel.ReferencedTableName].Add(rowModel.TableName);
+                _tableRefencedModelDictionary[rowModel.ReferencedTableName].Add(rowModel.TableName);
             }
-            return TableRefencedModelDictionary;
+            return _tableRefencedModelDictionary;
         }
 
         /// <summary>
@@ -179,7 +180,7 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns></returns>
-        private static List<string> GetDeleteTableNameList(string tableName, Dictionary<string, int> historyDictionary)
+        private List<string> GetDeleteTableNameList(string tableName, Dictionary<string, int> historyDictionary)
         {
             if (string.IsNullOrEmpty(tableName)) return null;
             var referencedMap = GetReferencedMap();
@@ -199,7 +200,7 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <param name="nodeName">current node name</param>
         /// <param name="historyDictionary">had access</param>
         /// <returns></returns>
-        private static List<string> TraversingGraph(Dictionary<string, List<string>> sourceDictionary, string nodeName, Dictionary<string, int> historyDictionary)
+        private List<string> TraversingGraph(Dictionary<string, List<string>> sourceDictionary, string nodeName, Dictionary<string, int> historyDictionary)
         {
             var result = new List<string>();
             //是否已经访问过
@@ -234,7 +235,7 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        public static string GetDropDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        public string GetDropDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
         {
             return GetDeleteOrDropDataTableSqlByName(new List<string> { tableName }, dataBase, isView, 1);
         }
@@ -248,7 +249,7 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        public static string GetDropDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false)
+        public string GetDropDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false)
         {
             return GetDeleteOrDropDataTableSqlByName(tableNameList, dataBase, isView, 0);
         }
@@ -262,7 +263,7 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <author>FreshMan</author>
         /// <creattime>2017-09-5</creattime>
         /// <returns>delete table or view sql command</returns>
-        public static string GetDeleteDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        public string GetDeleteDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
         {
             return GetDeleteOrDropDataTableSqlByName(new List<string> { tableName }, dataBase, isView, 1);
         }
@@ -276,7 +277,7 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>delete table or view sql command</returns>
-        public static string GetDeleteDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false)
+        public string GetDeleteDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false)
         {
             return GetDeleteOrDropDataTableSqlByName(tableNameList, dataBase, isView, 1);
         }

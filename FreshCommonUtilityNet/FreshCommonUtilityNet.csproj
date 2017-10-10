@@ -127,9 +127,12 @@
     <Compile Include="Cookie\CookieHelper.cs" />
     <Compile Include="Dapper\ColumnAttribute.cs" />
     <Compile Include="Dapper\EditableAttribute.cs" />
+    <Compile Include="Dapper\IColumnNameResolver.cs" />
+    <Compile Include="Dapper\IDealMoreOtherPart.cs" />
     <Compile Include="Dapper\IgnoreInsertAttribute.cs" />
     <Compile Include="Dapper\IgnoreSelectAttribute.cs" />
     <Compile Include="Dapper\IgnoreUpdateAttribute.cs" />
+    <Compile Include="Dapper\ITableNameResolver.cs" />
     <Compile Include="Dapper\KeyAttribute.cs" />
     <Compile Include="Dapper\MySqlPart.cs" />
     <Compile Include="Dapper\NotMappedAttribute.cs" />
@@ -155,7 +158,6 @@
     <Compile Include="Security\IDCardValidatorHelper.cs" />
     <Compile Include="Security\RandomHelper.cs" />
     <Compile Include="Security\AesHelper.cs" />
-    <Compile Include="SqlHelper\MsSqlHelper.cs" />
     <Compile Include="SqlHelper\SqlConnectionHelper.cs" />
     <Compile Include="SqlHelper\SqlHelper.cs" />
     <Compile Include="Web\FilterHTMLHelper.cs" />

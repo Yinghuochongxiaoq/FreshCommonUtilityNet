@@ -14,8 +14,10 @@ namespace FreshCommonUtility.Dapper
     /// <summary>
     /// Main class for Dapper.SimpleCRUD extensions
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     public static partial class SimpleCRUD
     {
+        #region [1 Cons tract function]
         /// <summary>
         /// Stuck function,default sql type is LocalDB
         /// </summary>
@@ -23,7 +25,9 @@ namespace FreshCommonUtility.Dapper
         {
             SetDialect(_dialect);
         }
+        #endregion
 
+        #region [2 Partially variable]
         /// <summary>
         /// Default use SQLServer
         /// </summary>
@@ -54,9 +58,23 @@ namespace FreshCommonUtility.Dapper
         /// </summary>
         private static readonly IDictionary<string, Tuple<string, Dialect>> ColumnNames = new Dictionary<string, Tuple<string, Dialect>>();
 
+        /// <summary>
+        /// table name resolver
+        /// </summary>
         private static ITableNameResolver _tableNameResolver = new TableNameResolver();
+
+        /// <summary>
+        /// column name resolver
+        /// </summary>
         private static IColumnNameResolver _columnNameResolver = new ColumnNameResolver();
 
+        /// <summary>
+        /// deal more other part
+        /// </summary>
+        private static IDealMoreOtherPart _dealMoreOtherPart;
+        #endregion
+
+        #region [3 GetDialect]
         /// <summary>
         /// Returns the current dialect name
         /// </summary>
@@ -65,7 +83,9 @@ namespace FreshCommonUtility.Dapper
         {
             return _dialect;
         }
+        #endregion
 
+        #region [4 GetDialectString]
         /// <summary>
         /// Returns the current dialect name
         /// </summary>
@@ -74,7 +94,9 @@ namespace FreshCommonUtility.Dapper
         {
             return _dialect.ToString();
         }
+        #endregion
 
+        #region [5 Set Dialect,change database type]
         /// <summary>
         /// Sets the database dialect 
         /// </summary>
@@ -88,28 +110,34 @@ namespace FreshCommonUtility.Dapper
                 //    _encapsulation = "\"{0}\"";
                 //    _getIdentitySql = "SELECT LASTVAL() AS id";
                 //    _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
+                //_dealMoreOtherPart = null;
                 //    break;
                 case Dialect.SQLite:
                     _dialect = Dialect.SQLite;
                     _encapsulation = "\"{0}\"";
                     _getIdentitySql = "SELECT LAST_INSERT_ROWID() AS id";
                     _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
+                    _dealMoreOtherPart = null;
                     break;
                 case Dialect.MySQL:
                     _dialect = Dialect.MySQL;
                     _encapsulation = "`{0}`";
                     _getIdentitySql = "SELECT LAST_INSERT_ID() AS id";
                     _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {Offset},{RowsPerPage}";
+                    _dealMoreOtherPart = new MySqlPart();
                     break;
                 default:
                     _dialect = Dialect.SQLServer;
                     _encapsulation = "[{0}]";
                     _getIdentitySql = "SELECT CAST(SCOPE_IDENTITY()  AS BIGINT) AS [id]";
                     _getPagedListSql = "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {OrderBy}) AS PagedNumber, {SelectColumns} FROM {TableName} {WhereClause}) AS u WHERE PagedNUMBER BETWEEN (({PageNumber}-1) * {RowsPerPage} + 1) AND ({PageNumber} * {RowsPerPage})";
+                    _dealMoreOtherPart = new SqlServerPart();
                     break;
             }
         }
+        #endregion
 
+        #region [6 Set youself Tablename resolver]
         /// <summary>
         /// Sets the table name resolver
         /// </summary>
@@ -118,7 +146,9 @@ namespace FreshCommonUtility.Dapper
         {
             _tableNameResolver = resolver;
         }
+        #endregion
 
+        #region [7 Set youself Column resolver]
         /// <summary>
         /// Sets the column name resolver
         /// </summary>
@@ -127,7 +157,9 @@ namespace FreshCommonUtility.Dapper
         {
             _columnNameResolver = resolver;
         }
+        #endregion
 
+        #region [8 Get Entity]
         /// <summary>
         /// <para>By default queries the table matching the class name</para>
         /// <para>-Table name can be overridden by adding an attribute on your class [Table("YourTableName")]</para>
@@ -170,11 +202,12 @@ namespace FreshCommonUtility.Dapper
             else
             {
                 foreach (var prop in idProps)
+                    // ReSharper disable once PossibleNullReferenceException
                     dynParms.Add("@" + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(string.Format("Get<{0}>: {1} with Id: {2}", currenttype, sb, id));
+                Trace.WriteLine($"Get<{currenttype}>: {sb} with Id: {id}");
             return connection.Query<T>(sb.ToString(), dynParms, transaction, true, commandTimeout).FirstOrDefault();
         }
 
@@ -325,7 +358,9 @@ namespace FreshCommonUtility.Dapper
 
             return connection.Query<T>(query, parameters, transaction, true, commandTimeout);
         }
+        #endregion
 
+        #region [9 Insert data to database]
         /// <summary>
         /// <para>Inserts a row into the database</para>
         /// <para>By default inserts into the table matching the class name</para>
@@ -421,7 +456,9 @@ namespace FreshCommonUtility.Dapper
             }
             return (TKey)r.First().id;
         }
+        #endregion
 
+        #region [10 Update entity info]
         /// <summary>
         /// <para>Updates a record or records in the database with only the properties of TEntity</para>
         /// <para>By default updates records in the table matching the class name</para>
@@ -454,11 +491,13 @@ namespace FreshCommonUtility.Dapper
             BuildWhere(sb, idProps, entityToUpdate);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(string.Format("Update: {0}", sb));
+                Trace.WriteLine($"Update: {sb}");
 
             return connection.Execute(sb.ToString(), entityToUpdate, transaction, commandTimeout);
         }
+        #endregion
 
+        #region [11 Delete Data from database]
         /// <summary>
         /// <para>Deletes a record or records in the database that match the object passed in</para>
         /// <para>-By default deletes records in the table matching the class name</para>
@@ -535,11 +574,12 @@ namespace FreshCommonUtility.Dapper
             else
             {
                 foreach (var prop in idProps)
+                    // ReSharper disable once PossibleNullReferenceException
                     dynParms.Add("@" + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(string.Format("Delete<{0}> {1}", currenttype, sb));
+                Trace.WriteLine($"Delete<{currenttype}> {sb}");
 
             return connection.Execute(sb.ToString(), dynParms, transaction, commandTimeout);
         }
@@ -611,11 +651,13 @@ namespace FreshCommonUtility.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(string.Format("DeleteList<{0}> {1}", currenttype, sb));
+                Trace.WriteLine($"DeleteList<{currenttype}> {sb}");
 
             return connection.Execute(sb.ToString(), parameters, transaction, commandTimeout);
         }
+        #endregion
 
+        #region [12 Get command count]
         /// <summary>
         /// <para>By default queries the table matching the class name</para>
         /// <para>-Table name can be overridden by adding an attribute on your class [Table("YourTableName")]</para>
@@ -641,7 +683,7 @@ namespace FreshCommonUtility.Dapper
             sb.Append(" " + conditions);
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(string.Format("RecordCount<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"RecordCount<{currenttype}>: {sb}");
 
             return connection.ExecuteScalar<int>(sb.ToString(), parameters, transaction, commandTimeout);
         }
@@ -675,11 +717,125 @@ namespace FreshCommonUtility.Dapper
             }
 
             if (Debugger.IsAttached)
-                Trace.WriteLine(string.Format("RecordCount<{0}>: {1}", currenttype, sb));
+                Trace.WriteLine($"RecordCount<{currenttype}>: {sb}");
 
             return connection.ExecuteScalar<int>(sb.ToString(), whereConditions, transaction, commandTimeout);
         }
+        #endregion
 
+        #region [13 Get disabled foreign key sql]
+
+        /// <summary>
+        /// Get disabled foreign key sql
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDisabledForeignKeySql(this IDbConnection connection)
+        {
+            return _dealMoreOtherPart.GetDisabledForeignKeySql(connection);
+        }
+
+        #endregion
+
+        #region [14 Get enabled foreign key sql]
+
+        /// <summary>
+        /// Get enabled foreign key sql
+        /// </summary>
+        /// <returns></returns>
+        public static string GetEnabledForeignKeySql(this IDbConnection connection)
+        {
+            return _dealMoreOtherPart.GetEnabledForeignKeySql(connection);
+        }
+
+        #endregion
+
+        #region [15 Get delete foreign key sql]
+
+        /// <summary>
+        /// Get delete foreign key sql
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDeleteForeignKeySql(this IDbConnection connection)
+        {
+            return _dealMoreOtherPart.GetDeleteForeignKeySql(connection);
+        }
+        #endregion
+
+        #region [16 Get recreat foreign key sql]
+
+        /// <summary>
+        /// Get recreat foreign key sql
+        /// </summary>
+        /// <returns></returns>
+        public static string GetReCreatForeignKeySql(this IDbConnection connection)
+        {
+            return _dealMoreOtherPart.GetReCreatForeignKeySql(connection);
+        }
+        #endregion
+
+        #region [17 Delete Table or drop table SQL Code]
+
+        /// <summary>
+        /// Drop table or view by name
+        /// </summary>
+        /// <param name="tableName">table or view name</param>
+        /// <param name="dataBase">Database name,default value is current link database</param>
+        /// <param name="isView">is view? true | false(default value)</param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-06</creattime>
+        /// <returns>drop table or view sql command</returns>
+        public static string GetDropDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        {
+            return _dealMoreOtherPart.GetDropDataTableSqlByName(tableName, dataBase, isView);
+        }
+
+        /// <summary>
+        /// Drop table or view by name
+        /// </summary>
+        /// <param name="tableNameList">table or view name set</param>
+        /// <param name="dataBase">Database name,default value is current link database</param>
+        /// <param name="isView">is view? true | false(default value)</param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-06</creattime>
+        /// <returns>drop table or view sql command</returns>
+        public static string GetDropDataTableSqlByName(List<string> tableNameList, string dataBase = null,
+            bool isView = false)
+        {
+            return _dealMoreOtherPart.GetDropDataTableSqlByName(tableNameList, dataBase, isView);
+        }
+
+        /// <summary>
+        /// Delete table or view by name
+        /// </summary>
+        /// <param name="tableName">table or view name</param>
+        /// <param name="dataBase">Database name,default value is current link database</param>
+        /// <param name="isView">is view? true | false(default value)</param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-5</creattime>
+        /// <returns>delete table or view sql command</returns>
+        public static string GetDeleteDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        {
+            return _dealMoreOtherPart.GetDeleteDataTableSqlByName(tableName, dataBase, isView);
+        }
+
+        /// <summary>
+        /// Delete table or view by name
+        /// </summary>
+        /// <param name="tableNameList">table or view name set</param>
+        /// <param name="dataBase">Database name,default value is current link database</param>
+        /// <param name="isView">is view? true | false(default value)</param>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-06</creattime>
+        /// <returns>delete table or view sql command</returns>
+        public static string GetDeleteDataTableSqlByName(List<string> tableNameList, string dataBase = null,
+            bool isView = false)
+        {
+            return _dealMoreOtherPart.GetDeleteDataTableSqlByName(tableNameList, dataBase, isView);
+        }
+
+        #endregion
+
+        #region [18 BuildUpdateSet]
         /// <summary>
         /// build update statement based on list on an entity
         /// </summary>
@@ -699,7 +855,9 @@ namespace FreshCommonUtility.Dapper
                     sb.AppendFormat(", ");
             }
         }
+        #endregion
 
+        #region [19 BuildSelect]
         /// <summary>
         /// build select clause based on list of properties skipping ones with the IgnoreSelect and NotMapped attribute
         /// </summary>
@@ -723,7 +881,9 @@ namespace FreshCommonUtility.Dapper
 
             }
         }
+        #endregion
 
+        #region [20 BuildWhere]
         /// <summary>
         /// match up generic properties to source entity properties to allow fetching of the column attribute
         /// the anonymous object used for search doesn't have the custom attributes attached to them so this allows us to build the correct where clause
@@ -734,6 +894,7 @@ namespace FreshCommonUtility.Dapper
         /// <param name="idProps"></param>
         /// <param name="sourceEntity"></param>
         /// <param name="whereConditions"></param>
+        // ReSharper disable once UnusedParameter.Local
         private static void BuildWhere<TEntity>(StringBuilder sb, IEnumerable<PropertyInfo> idProps, TEntity sourceEntity, object whereConditions = null)
         {
             var propertyInfos = idProps.ToArray();
@@ -765,7 +926,9 @@ namespace FreshCommonUtility.Dapper
                     sb.AppendFormat(" and ");
             }
         }
+        #endregion
 
+        #region [21 Build Insert Values and Parameters]
         /// <summary>
         /// build insert values which include all properties in the class that are:
         /// Not named Id
@@ -835,7 +998,9 @@ namespace FreshCommonUtility.Dapper
             if (sb.ToString().EndsWith(", "))
                 sb.Remove(sb.Length - 2, 2);
         }
+        #endregion
 
+        #region [22 Deal properties]
         /// <summary>
         /// Get all properties in an entity
         /// </summary>
@@ -882,7 +1047,6 @@ namespace FreshCommonUtility.Dapper
             return false;
         }
 
-
         /// <summary>
         /// <para>        Determine if the Attribute has an IsReadOnly key and return its boolean state fake the funk and try to mimick ReadOnlyAttribute in System.ComponentModel This allows use of the DataAnnotations property in the model and have the SimpleCRUD engine just figure it out without a reference</para>
         /// </summary>
@@ -913,6 +1077,7 @@ namespace FreshCommonUtility.Dapper
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>
         /// <returns></returns>
+        // ReSharper disable once UnusedParameter.Local
         private static IEnumerable<PropertyInfo> GetUpdateableProperties<T>(T entity)
         {
             var updateableProperties = GetScaffoldableProperties<T>();
@@ -990,6 +1155,7 @@ namespace FreshCommonUtility.Dapper
         {
             return string.Format(_encapsulation, databaseword);
         }
+
         /// <summary>
         /// Generates a guid based on the current date/time
         /// http://stackoverflow.com/questions/1752004/sequential-guid-generator-c-sharp
@@ -1008,7 +1174,9 @@ namespace FreshCommonUtility.Dapper
             bytes[4] = (byte)time.Second;
             return new Guid(bytes);
         }
+        #endregion
 
+        #region [23 Database enum]
         /// <summary>
         /// Database server dialects
         /// </summary>
@@ -1017,50 +1185,29 @@ namespace FreshCommonUtility.Dapper
             /// <summary>
             /// SQL Server
             /// </summary>
+            // ReSharper disable once InconsistentNaming
             SQLServer = 0,
 
-            /// <summary>
-            /// PostgreSQL
-            /// </summary>
-            //PostgreSQL = 1,
+            ///// <summary>
+            ///// PostgreSQL
+            ///// </summary>
+            //////PostgreSQL = 1,
 
             /// <summary>
             /// MySQL
             /// </summary>
+            // ReSharper disable once InconsistentNaming
             MySQL = 2,
 
             /// <summary>
             /// SQLite
             /// </summary>
+            // ReSharper disable once InconsistentNaming
             SQLite = 3,
         }
+        #endregion
 
-        /// <summary>
-        /// Interface table name resolver
-        /// </summary>
-        public interface ITableNameResolver
-        {
-            /// <summary>
-            /// table name resolver
-            /// </summary>
-            /// <param name="type"></param>
-            /// <returns></returns>
-            string ResolveTableName(Type type);
-        }
-
-        /// <summary>
-        /// Interface Column name resolver
-        /// </summary>
-        public interface IColumnNameResolver
-        {
-            /// <summary>
-            /// resolve column name
-            /// </summary>
-            /// <param name="propertyInfo"></param>
-            /// <returns></returns>
-            string ResolveColumnName(PropertyInfo propertyInfo);
-        }
-
+        #region [24 Default table name resolver]
         /// <summary>
         /// table name resolver
         /// </summary>
@@ -1096,7 +1243,9 @@ namespace FreshCommonUtility.Dapper
                 return tableName;
             }
         }
+        #endregion
 
+        #region [25 Default column name resolver]
         /// <summary>
         /// column name resolver
         /// </summary>
@@ -1121,11 +1270,25 @@ namespace FreshCommonUtility.Dapper
                 return columnName;
             }
         }
+        #endregion
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public static class DapperExtension
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="firstKey"></param>
+        /// <param name="secondKey"></param>
+        /// <param name="addChildren"></param>
+        /// <typeparam name="TFirst"></typeparam>
+        /// <typeparam name="TSecond"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <returns></returns>
         public static IEnumerable<TFirst> Map<TFirst, TSecond, TKey>(this SqlMapper.GridReader reader,
             Func<TFirst, TKey> firstKey,
             Func<TSecond, TKey> secondKey,
