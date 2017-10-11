@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Dapper;
 using FreshCommonUtility.CommonModel;
-using FreshCommonUtility.SqlHelper;
 
 // ReSharper disable once CheckNamespace
 namespace FreshCommonUtility.Dapper
@@ -83,6 +82,7 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
         /// <summary>
         /// Delete or drop table by name of table or view.
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
@@ -91,17 +91,17 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
         /// <creattime>2017-09-06</creattime>
         /// <returns>delete or drop table or view sql command</returns>
         // ReSharper disable once UnusedParameter.Local
-        private string GetDeleteOrDropDataTableSqlByName(List<string> tableNameList, string dataBase, bool isView, int type)
+        private string GetDeleteOrDropDataTableSqlByName(IDbConnection connection, List<string> tableNameList, string dataBase, bool isView, int type)
         {
             if (tableNameList == null || tableNameList.Count < 1) return string.Empty;
             var hadDeleteTable = new Dictionary<string, int>();
             var historyDictionary = new Dictionary<string, int>();
             StringBuilder resulteBuilder = new StringBuilder();
-            var typeSql = type == 1 ? " DELETE FROM " : (type == 0 ? " DROP TABLE IF EXISTS" : string.Empty);
+            var typeSql = type == 1 ? " DELETE FROM " : (type == 0 ? " DROP TABLE IF EXISTS " : string.Empty);
             foreach (var tableName in tableNameList.Distinct().Where(tableName => !string.IsNullOrEmpty(tableName)))
             {
                 if (historyDictionary.ContainsKey(tableName)) continue;
-                var referencedTableList = GetDeleteTableNameList(tableName, historyDictionary);
+                var referencedTableList = GetDeleteTableNameList(connection, tableName, historyDictionary);
                 if (!string.IsNullOrEmpty(dataBase))
                 {
                     dataBase = dataBase + ".";
@@ -126,9 +126,12 @@ WHERE REFERENCED_TABLE_NAME is not NULL ";
 
         /// <summary>
         /// Citation Graph
+        /// </summary>
+        /// <param name="connection">connection</param>
+        /// <param name="databaseName">database name</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
-        /// </summary>        private Dictionary<string, List<string>> GetReferencedMap()
+        private Dictionary<string, List<string>> GetReferencedMap(IDbConnection connection, string databaseName)
         {
             if (_tableRefencedModelDictionary.Any()) return _tableRefencedModelDictionary;
             string sqlCmd = $@"SELECT
@@ -143,10 +146,8 @@ WHERE
 	TABLE_SCHEMA = '{0}'
 AND REFERENCED_COLUMN_NAME IS NOT NULL ";
             var resulteInfo = new List<ReferencedModel>();
-            var connection = SqlConnectionHelper.GetOpenConnection();
-            var dataBaseName = connection.Database;
-            if (string.IsNullOrEmpty(dataBaseName)) return null;
-            sqlCmd = string.Format(sqlCmd, dataBaseName);
+            if (string.IsNullOrEmpty(databaseName)) return null;
+            sqlCmd = string.Format(sqlCmd, databaseName);
             var dr = connection.ExecuteReader(sqlCmd);
             while (dr.Read())
             {
@@ -175,15 +176,16 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <summary>
         /// get citation graph set.
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table name</param>
         /// <param name="historyDictionary">access link route</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns></returns>
-        private List<string> GetDeleteTableNameList(string tableName, Dictionary<string, int> historyDictionary)
+        private List<string> GetDeleteTableNameList(IDbConnection connection, string tableName, Dictionary<string, int> historyDictionary)
         {
             if (string.IsNullOrEmpty(tableName)) return null;
-            var referencedMap = GetReferencedMap();
+            var referencedMap = GetReferencedMap(connection, tableName);
             if (!referencedMap.ContainsKey(tableName))
             {
                 historyDictionary.Add(tableName, 1);
@@ -229,57 +231,61 @@ AND REFERENCED_COLUMN_NAME IS NOT NULL ";
         /// <summary>
         /// Drop table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table or view name</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        public string GetDropDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        public string GetDropDataTableSqlByName(IDbConnection connection, string tableName, string dataBase = null, bool isView = false)
         {
-            return GetDeleteOrDropDataTableSqlByName(new List<string> { tableName }, dataBase, isView, 1);
+            return GetDeleteOrDropDataTableSqlByName(connection, new List<string> { tableName }, dataBase, isView, 0);
         }
 
         /// <summary>
         /// Drop table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        public string GetDropDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false)
+        public string GetDropDataTableSqlByName(IDbConnection connection, List<string> tableNameList, string dataBase = null, bool isView = false)
         {
-            return GetDeleteOrDropDataTableSqlByName(tableNameList, dataBase, isView, 0);
+            return GetDeleteOrDropDataTableSqlByName(connection, tableNameList, dataBase, isView, 0);
         }
 
         /// <summary>
         /// Delete table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table or view name</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-5</creattime>
         /// <returns>delete table or view sql command</returns>
-        public string GetDeleteDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        public string GetDeleteDataTableSqlByName(IDbConnection connection, string tableName, string dataBase = null, bool isView = false)
         {
-            return GetDeleteOrDropDataTableSqlByName(new List<string> { tableName }, dataBase, isView, 1);
+            return GetDeleteOrDropDataTableSqlByName(connection, new List<string> { tableName }, dataBase, isView, 1);
         }
 
         /// <summary>
         /// Delete table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>delete table or view sql command</returns>
-        public string GetDeleteDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false)
+        public string GetDeleteDataTableSqlByName(IDbConnection connection, List<string> tableNameList, string dataBase = null, bool isView = false)
         {
-            return GetDeleteOrDropDataTableSqlByName(tableNameList, dataBase, isView, 1);
+            return GetDeleteOrDropDataTableSqlByName(connection, tableNameList, dataBase, isView, 1);
         }
         #endregion
     }

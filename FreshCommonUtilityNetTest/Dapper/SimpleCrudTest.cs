@@ -1403,5 +1403,101 @@ namespace FreshCommonUtilityNetTest.Dapper
                 connection.Insert(testModelTest);
             }
         }
+
+        /// <summary>
+        /// Drop table or view by name
+        /// </summary>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-06</creattime>
+        /// <returns>drop table or view sql command</returns>
+        public void TestGetDropDataTableSqlByName()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var database = connection.Database;
+                var tableName = "Users";
+                var dropTableSql = connection.GetDropDataTableSqlByName(tableName, database);
+                if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.MySQL)
+                {
+                    dropTableSql.IsEqualTo(" DROP TABLE IF EXISTS testdb.Users ;");
+                }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLServer)
+                {
+                    dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DROP TABLE DapperSimpleCrudTestDb.dbo.[Users] ;");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Drop table or view by name
+        /// </summary>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-06</creattime>
+        /// <returns>drop table or view sql command</returns>
+        public void TestGetDropDataTableSqlByNameList()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var database = connection.Database;
+                var tableName = new List<string> { "Users" };
+                var dropTableSql = connection.GetDropDataTableSqlByName(tableName, database);
+                if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.MySQL)
+                {
+                    dropTableSql.IsEqualTo(" DROP TABLE IF EXISTS testdb.Users ;");
+                }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLServer)
+                {
+                    dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DROP TABLE DapperSimpleCrudTestDb.dbo.[Users] ;");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete table or view by name
+        /// </summary>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-5</creattime>
+        /// <returns>delete table or view sql command</returns>
+        public void TestGetDeleteDataTableSqlByName()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var database = connection.Database;
+                var tableName = "Users";
+                var dropTableSql = connection.GetDeleteDataTableSqlByName(tableName, database);
+                if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.MySQL)
+                {
+                    dropTableSql.IsEqualTo(" DELETE FROM testdb.Users ;");
+                }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLServer)
+                {
+                    dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DELETE FROM DapperSimpleCrudTestDb.dbo.[Users] ;");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete table or view by name
+        /// </summary>
+        /// <author>FreshMan</author>
+        /// <creattime>2017-09-06</creattime>
+        /// <returns>delete table or view sql command</returns>
+        public void TestGetDeleteDataTableSqlByNameList()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var database = connection.Database;
+                var tableName = new List<string> { "Users" };
+                var dropTableSql = connection.GetDeleteDataTableSqlByName(tableName, database);
+                if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.MySQL)
+                {
+                    dropTableSql.IsEqualTo(" DELETE FROM testdb.Users ;");
+                }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLServer)
+                {
+                    dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DELETE FROM DapperSimpleCrudTestDb.dbo.[Users] ;");
+                }
+            }
+        }
     }
 }

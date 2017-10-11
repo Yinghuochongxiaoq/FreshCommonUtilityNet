@@ -63,46 +63,50 @@ namespace FreshCommonUtility.Dapper
         /// <summary>
         /// Drop table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table or view name</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        string GetDropDataTableSqlByName(string tableName, string dataBase = null, bool isView = false);
+        string GetDropDataTableSqlByName(IDbConnection connection, string tableName, string dataBase = null, bool isView = false);
 
         /// <summary>
         /// Drop table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        string GetDropDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false);
+        string GetDropDataTableSqlByName(IDbConnection connection, List<string> tableNameList, string dataBase = null, bool isView = false);
 
         /// <summary>
         /// Delete table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table or view name</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-5</creattime>
         /// <returns>delete table or view sql command</returns>
-        string GetDeleteDataTableSqlByName(string tableName, string dataBase = null, bool isView = false);
+        string GetDeleteDataTableSqlByName(IDbConnection connection, string tableName, string dataBase = null, bool isView = false);
 
         /// <summary>
         /// Delete table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>delete table or view sql command</returns>
-        string GetDeleteDataTableSqlByName(List<string> tableNameList, string dataBase = null, bool isView = false);
+        string GetDeleteDataTableSqlByName(IDbConnection connection, List<string> tableNameList, string dataBase = null, bool isView = false);
 
         #endregion
     }

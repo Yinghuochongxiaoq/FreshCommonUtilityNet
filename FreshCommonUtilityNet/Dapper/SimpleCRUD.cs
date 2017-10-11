@@ -778,59 +778,63 @@ namespace FreshCommonUtility.Dapper
         /// <summary>
         /// Drop table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table or view name</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        public static string GetDropDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        public static string GetDropDataTableSqlByName(this IDbConnection connection, string tableName, string dataBase = null, bool isView = false)
         {
-            return _dealMoreOtherPart.GetDropDataTableSqlByName(tableName, dataBase, isView);
+            return _dealMoreOtherPart.GetDropDataTableSqlByName(connection, tableName, dataBase, isView);
         }
 
         /// <summary>
         /// Drop table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>drop table or view sql command</returns>
-        public static string GetDropDataTableSqlByName(List<string> tableNameList, string dataBase = null,
+        public static string GetDropDataTableSqlByName(this IDbConnection connection, List<string> tableNameList, string dataBase = null,
             bool isView = false)
         {
-            return _dealMoreOtherPart.GetDropDataTableSqlByName(tableNameList, dataBase, isView);
+            return _dealMoreOtherPart.GetDropDataTableSqlByName(connection, tableNameList, dataBase, isView);
         }
 
         /// <summary>
         /// Delete table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableName">table or view name</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-5</creattime>
         /// <returns>delete table or view sql command</returns>
-        public static string GetDeleteDataTableSqlByName(string tableName, string dataBase = null, bool isView = false)
+        public static string GetDeleteDataTableSqlByName(this IDbConnection connection, string tableName, string dataBase = null, bool isView = false)
         {
-            return _dealMoreOtherPart.GetDeleteDataTableSqlByName(tableName, dataBase, isView);
+            return _dealMoreOtherPart.GetDeleteDataTableSqlByName(connection, tableName, dataBase, isView);
         }
 
         /// <summary>
         /// Delete table or view by name
         /// </summary>
+        /// <param name="connection">connection</param>
         /// <param name="tableNameList">table or view name set</param>
         /// <param name="dataBase">Database name,default value is current link database</param>
         /// <param name="isView">is view? true | false(default value)</param>
         /// <author>FreshMan</author>
         /// <creattime>2017-09-06</creattime>
         /// <returns>delete table or view sql command</returns>
-        public static string GetDeleteDataTableSqlByName(List<string> tableNameList, string dataBase = null,
+        public static string GetDeleteDataTableSqlByName(this IDbConnection connection, List<string> tableNameList, string dataBase = null,
             bool isView = false)
         {
-            return _dealMoreOtherPart.GetDeleteDataTableSqlByName(tableNameList, dataBase, isView);
+            return _dealMoreOtherPart.GetDeleteDataTableSqlByName(connection, tableNameList, dataBase, isView);
         }
 
         #endregion
