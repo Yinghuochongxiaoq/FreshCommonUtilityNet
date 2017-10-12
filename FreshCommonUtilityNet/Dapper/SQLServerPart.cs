@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using Dapper;
@@ -354,5 +356,141 @@ FROM
             return GetDeleteOrDropDataTableSqlByName(connection, tableNameList, dataBase, isView, 1);
         }
         #endregion
+
+        /// <summary> 
+        /// insert large data(20000/batch)
+        /// </summary>
+        /// <param name="connection">connection</param>
+        /// <param name="tableName">tablename</param>
+        /// <param name="dt">the same sturction of datatable</param>
+        public static void BulkCopy(IDbConnection connection, string tableName, DataTable dt)
+        {
+            if (string.IsNullOrEmpty(tableName) || dt == null || dt.Rows.Count < 0) return;
+            var sqlConnection = connection as SqlConnection;
+            if (sqlConnection == null) return;
+            using (SqlTransaction transaction = sqlConnection.BeginTransaction())
+            {
+                using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
+                {
+                    bulkCopy.BatchSize = 20000;
+                    bulkCopy.BulkCopyTimeout = 60;
+                    bulkCopy.DestinationTableName = tableName;
+                    try
+                    {
+                        foreach (DataColumn col in dt.Columns)
+                        {
+                            bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                        }
+                        bulkCopy.WriteToServer(dt);
+                        transaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                    finally
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// insert large data(20000/batch) 
+        /// </summary>
+        /// <param name="connection">connection</param>
+        /// <param name="dt">the same sturction of datatable</param>
+        public static void BulkCopy(IDbConnection connection, DataTable dt)
+        {
+            BulkCopy(connection, dt.TableName, dt);
+        }
+
+        /// <summary>
+        /// insert large data(20000/batch) 
+        /// </summary>
+        /// <param name="connection">connection</param>
+        /// <param name="ds">Table's set,every one have the same as db table struction,Table's name is DB table name</param>
+        public static void BulkCopy(IDbConnection connection, DataSet ds)
+        {
+            if (ds == null || ds.Tables.Count < 1) return;
+            var sqlConnection = connection as SqlConnection;
+            if (sqlConnection == null) return;
+            using (SqlTransaction transaction = sqlConnection.BeginTransaction())
+            {
+                try
+                {
+                    foreach (DataTable dt in ds.Tables)
+                    {
+                        if (dt == null || dt.Rows.Count < 1 || string.IsNullOrEmpty(dt.TableName)) continue;
+                        using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
+                        {
+                            bulkCopy.BatchSize = 20000;
+                            bulkCopy.BulkCopyTimeout = 60;
+                            bulkCopy.DestinationTableName = dt.TableName;
+                            foreach (DataColumn col in dt.Columns)
+                            {
+                                bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                            }
+                            bulkCopy.WriteToServer(dt);
+                        }
+                    }
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
+
+        /// <summary>
+        /// insert large data(20000/batch) 
+        /// </summary>
+        /// <param name="connection">connection</param>
+        /// <param name="ds">Table's set,every one have the same as db table struction,Table's name is DB table name</param>
+        public static void BulkCopy(IDbConnection connection, List<DataTable> ds)
+        {
+            if (ds == null || ds.Count < 1) return;
+            var sqlConnection = connection as SqlConnection;
+            if (sqlConnection == null) return;
+            using (SqlTransaction transaction = sqlConnection.BeginTransaction())
+            {
+                try
+                {
+                    foreach (DataTable dt in ds)
+                    {
+                        if (dt == null || dt.Rows.Count < 1 || string.IsNullOrEmpty(dt.TableName)) continue;
+                        using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
+                        {
+                            bulkCopy.BatchSize = 20000;
+                            bulkCopy.BulkCopyTimeout = 60;
+                            bulkCopy.DestinationTableName = dt.TableName;
+                            foreach (DataColumn col in dt.Columns)
+                            {
+                                bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                            }
+                            bulkCopy.WriteToServer(dt);
+                        }
+                    }
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+                finally
+                {
+                    sqlConnection.Close();
+                }
+            }
+        }
     }
 }
