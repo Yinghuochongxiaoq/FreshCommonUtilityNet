@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Data.SQLite;
 using FreshCommonUtility.Configure;
@@ -32,6 +33,7 @@ namespace FreshCommonUtility.SqlHelper
         /// </summary>
         /// <param name="connectionString">you need new connection object.</param>
         /// <returns></returns>
+        [Obsolete("This method is used by mysql,in next publish will delete.The new Mehtod is GetOpenConnection()")]
         public static MySqlConnection GetMySqlConnectionConnection(string connectionString = null)
         {
             if (!string.IsNullOrEmpty(connectionString))

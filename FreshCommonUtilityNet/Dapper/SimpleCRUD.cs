@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Dapper;
+using FreshCommonUtilityNet.Dapper;
 using Microsoft.CSharp.RuntimeBinder;
 
 // ReSharper disable once CheckNamespace
@@ -117,7 +118,7 @@ namespace FreshCommonUtility.Dapper
                     _encapsulation = "\"{0}\"";
                     _getIdentitySql = "SELECT LAST_INSERT_ROWID() AS id";
                     _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
-                    _dealMoreOtherPart = null;
+                    _dealMoreOtherPart = new SqlitePart();
                     break;
                 case Dialect.MySQL:
                     _dialect = Dialect.MySQL;

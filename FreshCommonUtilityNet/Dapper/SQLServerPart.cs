@@ -357,8 +357,9 @@ FROM
         }
         #endregion
 
+        #region [6、BulkCopy DataTable data to DB table]
         /// <summary> 
-        /// insert large data(20000/batch)
+        /// insert large data
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="tableName">tablename</param>
@@ -372,7 +373,7 @@ FROM
             {
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
                 {
-                    bulkCopy.BatchSize = 20000;
+                    //bulkCopy.BatchSize = 20000;
                     bulkCopy.BulkCopyTimeout = 60;
                     bulkCopy.DestinationTableName = tableName;
                     try
@@ -398,7 +399,7 @@ FROM
         }
 
         /// <summary>
-        /// insert large data(20000/batch) 
+        /// insert large data
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="dt">the same sturction of datatable</param>
@@ -408,7 +409,7 @@ FROM
         }
 
         /// <summary>
-        /// insert large data(20000/batch) 
+        /// insert large data
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="ds">Table's set,every one have the same as db table struction,Table's name is DB table name</param>
@@ -426,7 +427,7 @@ FROM
                         if (dt == null || dt.Rows.Count < 1 || string.IsNullOrEmpty(dt.TableName)) continue;
                         using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
                         {
-                            bulkCopy.BatchSize = 20000;
+                            //bulkCopy.BatchSize = 20000;
                             bulkCopy.BulkCopyTimeout = 60;
                             bulkCopy.DestinationTableName = dt.TableName;
                             foreach (DataColumn col in dt.Columns)
@@ -451,7 +452,7 @@ FROM
         }
 
         /// <summary>
-        /// insert large data(20000/batch) 
+        /// insert large data
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="ds">Table's set,every one have the same as db table struction,Table's name is DB table name</param>
@@ -469,7 +470,7 @@ FROM
                         if (dt == null || dt.Rows.Count < 1 || string.IsNullOrEmpty(dt.TableName)) continue;
                         using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
                         {
-                            bulkCopy.BatchSize = 20000;
+                            //bulkCopy.BatchSize = 20000;
                             bulkCopy.BulkCopyTimeout = 60;
                             bulkCopy.DestinationTableName = dt.TableName;
                             foreach (DataColumn col in dt.Columns)
@@ -492,5 +493,6 @@ FROM
                 }
             }
         }
+        #endregion
     }
 }

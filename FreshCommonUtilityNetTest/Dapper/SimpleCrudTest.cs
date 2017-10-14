@@ -671,7 +671,6 @@ namespace FreshCommonUtilityNetTest.Dapper
         /// <summary>
         /// <para>A GUID is being created and returned on insert but never actually</para>
         /// <para>applied to the insert query.</para>
-
         ///This can be seen on a table where the key
         ///is a GUID and defaults to(newid()) and no GUID is provided on the
         ///insert.Dapper will generate a GUID but it is not applied so the GUID is
@@ -1077,7 +1076,6 @@ namespace FreshCommonUtilityNetTest.Dapper
             }
         }
 
-
         /// <summary>
         /// TestGetListPagedWithSpecifiedPrimaryKey
         /// </summary>
@@ -1425,6 +1423,10 @@ namespace FreshCommonUtilityNetTest.Dapper
                 {
                     dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DROP TABLE DapperSimpleCrudTestDb.dbo.[Users] ;");
                 }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLite)
+                {
+                    dropTableSql.IsEqualTo(" drop table if  exists main.Users ;");
+                }
             }
         }
 
@@ -1448,6 +1450,10 @@ namespace FreshCommonUtilityNetTest.Dapper
                 else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLServer)
                 {
                     dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DROP TABLE DapperSimpleCrudTestDb.dbo.[Users] ;");
+                }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLite)
+                {
+                    dropTableSql.IsEqualTo(" drop table if  exists main.Users ;");
                 }
             }
         }
@@ -1473,6 +1479,10 @@ namespace FreshCommonUtilityNetTest.Dapper
                 {
                     dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DELETE FROM DapperSimpleCrudTestDb.dbo.[Users] ;");
                 }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLite)
+                {
+                    dropTableSql.IsEqualTo("delete from Users;");
+                }
             }
         }
 
@@ -1496,6 +1506,10 @@ namespace FreshCommonUtilityNetTest.Dapper
                 else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLServer)
                 {
                     dropTableSql.IsEqualTo(";IF EXISTS ( SELECT * FROM DapperSimpleCrudTestDb.dbo.sysobjects WHERE name = 'Users' AND type = 'U')  DELETE FROM DapperSimpleCrudTestDb.dbo.[Users] ;");
+                }
+                else if (SimpleCRUD.GetDialect() == SimpleCRUD.Dialect.SQLite)
+                {
+                    dropTableSql.IsEqualTo("delete from Users;");
                 }
             }
         }

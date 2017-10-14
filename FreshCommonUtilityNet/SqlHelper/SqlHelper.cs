@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -24,6 +25,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">链接字符串</param>
         /// <returns>int</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static int ExcuteNonQuery(string cmd, DynamicParameters param, bool flag = false, string connection = null)
         {
             int result;
@@ -45,6 +47,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">链接字符串</param>
         /// <returns>int</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static async Task<int> ExcuteNonQueryAsync(string cmd, DynamicParameters param, bool flag = false, string connection = null)
         {
             int result;
@@ -71,6 +74,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">连接字符串</param>
         /// <returns>The first cell selected</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static object ExecuteScalar(string cmd, DynamicParameters param, bool flag = false, string connection = null)
         {
             object result;
@@ -92,6 +96,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">连接字符串</param>
         /// <returns>The first cell selected</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static async Task<object> ExecuteScalarAsync(string cmd, DynamicParameters param, bool flag = false, string connection = null)
         {
             object result;
@@ -118,6 +123,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">连接字符串</param>
         /// <returns>t</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static T FindOne<T>(string cmd, DynamicParameters param, bool flag = false, string connection = null) where T : class, new()
         {
             T dataReader;
@@ -140,6 +146,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">连接字符串</param>
         /// <returns>t</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static async Task<T> FindOneAsync<T>(string cmd, DynamicParameters param, bool flag = false, string connection = null) where T : class, new()
         {
             MySqlConnection con = SqlConnectionHelper.GetMySqlConnectionConnection(connection);
@@ -158,6 +165,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">连接字符串</param>
         /// <returns>t</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static IList<T> FindToList<T>(string cmd, DynamicParameters param, bool flag = false, string connection = null) where T : class, new()
         {
             IEnumerable<T> dataReader;
@@ -180,6 +188,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="flag">true存储过程，false sql语句(default)</param>
         /// <param name="connection">连接字符串</param>
         /// <returns>t</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static async Task<IList<T>> FindToListAsync<T>(string cmd, DynamicParameters param, bool flag = false, string connection = null) where T : class, new()
         {
             MySqlConnection con = SqlConnectionHelper.GetMySqlConnectionConnection(connection);
@@ -206,6 +215,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="groupby">group by</param>
         /// <param name="connectionstring">connection string.</param>
         /// <returns>page data</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static IList<T> SearchPageList<T>(string tbName, string strWhere, string orderBy, string fieldList, int pageIndex, int pageSize, DynamicParameters param, out long allCount, string groupby = null, string connectionstring = null) where T : class, new()
         {
             var searchCount = $"select count(*) from {tbName} where 1=1 {strWhere} ";
@@ -260,6 +270,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="param">params.</param>
         /// <param name="connectionstring">connection string.</param>
         /// <returns>page data</returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static async Task<IList<T>> SearchPageListAsync<T>(string tbName, string strWhere, string orderBy, string fieldList, int pageIndex, int pageSize, DynamicParameters param, string connectionstring = null) where T : class, new()
         {
             MySqlConnection con = SqlConnectionHelper.GetMySqlConnectionConnection(connectionstring);
@@ -295,6 +306,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="param">params</param>
         /// <param name="connectionstring">connection database string.</param>
         /// <returns></returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static IList<T> SearchPageListHigh<T>(string tbName, string strWhere, string orderBy, string fieldList, string primaryKey, int pageIndex, int pageSize, out long allCount, DynamicParameters param, string connectionstring = null)
         {
             MySqlConnection con = SqlConnectionHelper.GetMySqlConnectionConnection(connectionstring);
@@ -347,6 +359,7 @@ namespace FreshCommonUtility.SqlHelper
         /// <param name="param">params</param>
         /// <param name="connectionstring">connection database string.</param>
         /// <returns></returns>
+        [Obsolete("This method is used by mysql,in next publish will delete")]
         public static async Task<IList<T>> SearchPageListHighAsync<T>(string tbName, string strWhere, string orderBy, string fieldList, string primaryKey, int pageIndex, int pageSize, DynamicParameters param, string connectionstring = null)
         {
             MySqlConnection con = SqlConnectionHelper.GetMySqlConnectionConnection(connectionstring);

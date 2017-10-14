@@ -29,7 +29,8 @@ namespace FreshCommonUtilityNetTest.Dapper
         /// </summary>
         private void SetupSqLite()
         {
-            File.Delete(Directory.GetCurrentDirectory() + "\\MyDatabase.sqlite");
+            var filepath = Directory.GetCurrentDirectory() + "\\MyDatabase.sqlite";
+            if (File.Exists(filepath)) File.Delete(filepath);
             SQLiteConnection.CreateFile("MyDatabase.sqlite");
             var connection = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
             using (connection)
