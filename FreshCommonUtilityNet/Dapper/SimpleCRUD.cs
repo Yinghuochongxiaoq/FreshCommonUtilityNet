@@ -1281,7 +1281,7 @@ namespace FreshCommonUtility.Dapper
     /// <summary>
     /// 
     /// </summary>
-    public static class DapperExtension
+    internal static class DapperExtension
     {
         /// <summary>
         /// 
