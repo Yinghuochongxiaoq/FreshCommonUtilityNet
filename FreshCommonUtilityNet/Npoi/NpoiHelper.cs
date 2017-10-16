@@ -390,6 +390,7 @@ namespace FreshCommonUtility.Npoi
                     var data = new DataTable();
                     var sheet = _workbook.GetSheetAt(sheetItem);
                     if (sheet == null) continue;
+                    data.TableName = sheet.SheetName;
                     IRow firstRow = sheet.GetRow(0);
                     //一行最后一个cell的编号 即总的列数
                     int cellCount = firstRow.LastCellNum;
