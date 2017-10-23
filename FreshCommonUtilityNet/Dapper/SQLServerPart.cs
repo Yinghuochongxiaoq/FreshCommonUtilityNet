@@ -358,13 +358,15 @@ FROM
         #endregion
 
         #region [6、BulkCopy DataTable data to DB table]
+
         /// <summary> 
         /// insert large data
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="tableName">tablename</param>
         /// <param name="dt">the same sturction of datatable</param>
-        public static void BulkCopy(IDbConnection connection, string tableName, DataTable dt)
+        /// <param name="timeOut">time out</param>
+        public static void BulkCopy(IDbConnection connection, string tableName, DataTable dt, int timeOut = 60)
         {
             if (string.IsNullOrEmpty(tableName) || dt == null || dt.Rows.Count < 0) return;
             var sqlConnection = connection as SqlConnection;
@@ -373,8 +375,7 @@ FROM
             {
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
                 {
-                    //bulkCopy.BatchSize = 20000;
-                    bulkCopy.BulkCopyTimeout = 60;
+                    bulkCopy.BulkCopyTimeout = timeOut;
                     bulkCopy.DestinationTableName = tableName;
                     try
                     {
@@ -403,9 +404,10 @@ FROM
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="dt">the same sturction of datatable</param>
-        public static void BulkCopy(IDbConnection connection, DataTable dt)
+        /// <param name="timeOut">time out</param>
+        public static void BulkCopy(IDbConnection connection, DataTable dt, int timeOut = 60)
         {
-            BulkCopy(connection, dt.TableName, dt);
+            BulkCopy(connection, dt.TableName, dt, timeOut);
         }
 
         /// <summary>
@@ -413,7 +415,8 @@ FROM
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="ds">Table's set,every one have the same as db table struction,Table's name is DB table name</param>
-        public static void BulkCopy(IDbConnection connection, DataSet ds)
+        /// <param name="timeOut">time out</param>
+        public static void BulkCopy(IDbConnection connection, DataSet ds, int timeOut = 60)
         {
             if (ds == null || ds.Tables.Count < 1) return;
             var sqlConnection = connection as SqlConnection;
@@ -427,8 +430,7 @@ FROM
                         if (dt == null || dt.Rows.Count < 1 || string.IsNullOrEmpty(dt.TableName)) continue;
                         using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
                         {
-                            //bulkCopy.BatchSize = 20000;
-                            bulkCopy.BulkCopyTimeout = 60;
+                            bulkCopy.BulkCopyTimeout = timeOut;
                             bulkCopy.DestinationTableName = dt.TableName;
                             foreach (DataColumn col in dt.Columns)
                             {
@@ -456,7 +458,8 @@ FROM
         /// </summary>
         /// <param name="connection">connection</param>
         /// <param name="ds">Table's set,every one have the same as db table struction,Table's name is DB table name</param>
-        public static void BulkCopy(IDbConnection connection, List<DataTable> ds)
+        /// <param name="timeOut">time out</param>
+        public static void BulkCopy(IDbConnection connection, List<DataTable> ds, int timeOut = 60)
         {
             if (ds == null || ds.Count < 1) return;
             var sqlConnection = connection as SqlConnection;
@@ -470,8 +473,7 @@ FROM
                         if (dt == null || dt.Rows.Count < 1 || string.IsNullOrEmpty(dt.TableName)) continue;
                         using (SqlBulkCopy bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
                         {
-                            //bulkCopy.BatchSize = 20000;
-                            bulkCopy.BulkCopyTimeout = 60;
+                            bulkCopy.BulkCopyTimeout = timeOut;
                             bulkCopy.DestinationTableName = dt.TableName;
                             foreach (DataColumn col in dt.Columns)
                             {
