@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+//using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
-using Dapper;
-using FreshCommonUtility.Dapper;
+//using Dapper;
+//using FreshCommonUtility.Dapper;
+using FreshCommonUtility.Web;
 using FreshCommonUtilityNetTest.Dapper;
 using FreshCommonUtilityNetTest.DataConvert;
 using FreshCommonUtilityNetTest.DeepCopy;
@@ -53,72 +54,76 @@ namespace FreshCommonUtilityNetTest
             stopwatch.Stop();
             Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
 
-            //EmitLearn.LearnInfo();
-            //ExpressionLear.LearnInfo();
+            EmitLearn.LearnInfo();
+            ExpressionLear.LearnInfo();
+
+            string result = WebHttpHelper.HttpsPost("https://www.ly.com", "key=123"); // key=4da4193e-384b-44d8-8a7f-2dd8b076d784
+            result.IsNotEqualTo(string.Empty);
+
             Console.ReadKey();
         }
 
-//        public class Contact
-//        {
-//            [Key]
-//            [Column("ContactID")]
-//            public int ContactId { get; set; }
-//            public string ContactName { get; set; }
-//            public IEnumerable<Phone> Phones { get; set; }
-//        }
+        //        public class Contact
+        //        {
+        //            [Key]
+        //            [Column("ContactID")]
+        //            public int ContactId { get; set; }
+        //            public string ContactName { get; set; }
+        //            public IEnumerable<Phone> Phones { get; set; }
+        //        }
 
-//        public class Phone
-//        {
-//            [Key]
-//            public int PhoneId { get; set; }
+        //        public class Phone
+        //        {
+        //            [Key]
+        //            public int PhoneId { get; set; }
 
-//            [Column("ContactID")]
-//            public int ContactId { get; set; }
+        //            [Column("ContactID")]
+        //            public int ContactId { get; set; }
 
-//            public string Number { get; set; }
+        //            public string Number { get; set; }
 
-//            public Byte IsActive { get; set; }
-//        }
+        //            public Byte IsActive { get; set; }
+        //        }
 
-//        public static void SaveInfo()
-//        {
-//            var phone = new Phone { Number = "1234567788", IsActive = 1 };
+        //        public static void SaveInfo()
+        //        {
+        //            var phone = new Phone { Number = "1234567788", IsActive = 1 };
 
-//            var contact = new Contact { ContactName = "MMP" };
-//            using (
-//                var conn =
-//                    new SqlConnection(
-//                        "data source=192.168.8.210;user id=sa;password=Evget123456789;initial catalog=ASPDataZZ19;Persist Security Info=true;")
-//                )
-//            {
-//                conn.Insert(contact);
-//                phone.ContactId = contact.ContactId;
-//                conn.Insert(phone);
-//            }
-//        }
+        //            var contact = new Contact { ContactName = "MMP" };
+        //            using (
+        //                var conn =
+        //                    new SqlConnection(
+        //                        "data source=192.168.8.210;user id=sa;password=Evget123456789;initial catalog=ASPDataZZ19;Persist Security Info=true;")
+        //                )
+        //            {
+        //                conn.Insert(contact);
+        //                phone.ContactId = contact.ContactId;
+        //                conn.Insert(phone);
+        //            }
+        //        }
 
-//        public static IEnumerable<Contact> GetContacts()
-//        {
-//            var sql = @"set nocount on
-//DECLARE @t TABLE(ContactID int,  ContactName nvarchar(100))
-//INSERT @t
-//SELECT *
-//FROM Contact
-//set nocount off 
-//SELECT * FROM @t 
-//SELECT * FROM Phone where ContactId in (select t.ContactId from @t t)";
-//            using (var conn = new SqlConnection("data source=192.168.8.210;user id=sa;password=Evget123456789;initial catalog=ASPDataZZ19;Persist Security Info=true;"))
-//            {
-//                conn.Open();
-//                var mapped = conn.QueryMultiple(sql).Map<Contact, Phone, int>
-//        (
-//           contact => contact.ContactId,
-//           phone => phone.ContactId,
-//           (contact, phones) => { contact.Phones = phones; }
-//        );
+        //        public static IEnumerable<Contact> GetContacts()
+        //        {
+        //            var sql = @"set nocount on
+        //DECLARE @t TABLE(ContactID int,  ContactName nvarchar(100))
+        //INSERT @t
+        //SELECT *
+        //FROM Contact
+        //set nocount off 
+        //SELECT * FROM @t 
+        //SELECT * FROM Phone where ContactId in (select t.ContactId from @t t)";
+        //            using (var conn = new SqlConnection("data source=192.168.8.210;user id=sa;password=Evget123456789;initial catalog=ASPDataZZ19;Persist Security Info=true;"))
+        //            {
+        //                conn.Open();
+        //                var mapped = conn.QueryMultiple(sql).Map<Contact, Phone, int>
+        //        (
+        //           contact => contact.ContactId,
+        //           phone => phone.ContactId,
+        //           (contact, phones) => { contact.Phones = phones; }
+        //        );
 
-//                return mapped;
-//            }
-//        }
+        //                return mapped;
+        //            }
+        //        }
     }
 }

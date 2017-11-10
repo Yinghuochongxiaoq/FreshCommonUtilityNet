@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -147,6 +151,70 @@ namespace FreshCommonUtility.Web
             var formDataBytes = formData == null ? new byte[0] : Encoding.UTF8.GetBytes(dataString);
             stream.Write(formDataBytes, 0, formDataBytes.Length);
             stream.Seek(0, SeekOrigin.Begin);//设置指针读取位置
+        }
+
+        /// <summary>
+        /// Post https request
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="postData"></param>
+        /// <returns></returns>
+        public static string HttpsPost(string url, string postData)
+        {
+            HttpWebRequest request;
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                request = WebRequest.Create(url) as HttpWebRequest;
+                if (request == null) return string.Empty;
+                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+                request.ProtocolVersion = HttpVersion.Version11;
+                // 这里设置了协议类型。
+                ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;// SecurityProtocolType.Tls1.2; 
+                request.KeepAlive = false;
+                ServicePointManager.CheckCertificateRevocationList = true;
+                ServicePointManager.DefaultConnectionLimit = 100;
+                ServicePointManager.Expect100Continue = false;
+            }
+            else
+            {
+                request = (HttpWebRequest)WebRequest.Create(url);
+            }
+
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.Referer = null;
+            request.AllowAutoRedirect = true;
+            request.UserAgent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2; .NET CLR 1.1.4322; .NET CLR 2.0.50727)";
+            request.Accept = "*/*";
+
+            byte[] data = Encoding.UTF8.GetBytes(postData);
+            Stream newStream = request.GetRequestStream();
+            newStream.Write(data, 0, data.Length);
+            newStream.Close();
+
+            //获取网页响应结果
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream stream = response.GetResponseStream();
+            if (stream == Stream.Null || stream == null) return string.Empty;
+            string result;
+            using (StreamReader sr = new StreamReader(stream))
+            {
+                result = sr.ReadToEnd();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Validation check method
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="certificate"></param>
+        /// <param name="chain"></param>
+        /// <param name="errors"></param>
+        /// <returns></returns>
+        private static bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
+        {
+            return true;
         }
     }
 }
