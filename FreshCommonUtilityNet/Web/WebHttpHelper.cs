@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -156,10 +157,11 @@ namespace FreshCommonUtility.Web
         /// <summary>
         /// Post https request
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="postData"></param>
+        /// <param name="url">URL</param>
+        /// <param name="postData">post data</param>
+        /// <param name="cookies">cookies</param>
         /// <returns></returns>
-        public static string HttpsPost(string url, string postData)
+        public static string HttpsPost(string url, string postData, Dictionary<string, System.Net.Cookie> cookies = null)
         {
             HttpWebRequest request;
             if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
@@ -186,6 +188,15 @@ namespace FreshCommonUtility.Web
             request.AllowAutoRedirect = true;
             request.UserAgent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2; .NET CLR 1.1.4322; .NET CLR 2.0.50727)";
             request.Accept = "*/*";
+            if (cookies != null && cookies.Any())
+            {
+                CookieContainer cc = new CookieContainer();
+                foreach (var cookie in cookies)
+                {
+                    cc.Add(new Uri(cookie.Key), cookie.Value);
+                }
+                request.CookieContainer = cc;
+            }
 
             byte[] data = Encoding.UTF8.GetBytes(postData);
             Stream newStream = request.GetRequestStream();
