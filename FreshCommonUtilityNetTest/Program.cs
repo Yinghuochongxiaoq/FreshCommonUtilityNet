@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 //using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Caching;
+using System.Security.Cryptography;
+using System.Text;
 //using FreshCommonUtility.Dapper;
 using FreshCommonUtility.Web;
 using FreshCommonUtilityNetTest.Dapper;
@@ -63,6 +66,70 @@ namespace FreshCommonUtilityNetTest
 
             Console.ReadKey();
         }
+
+        private static int VerifySignature(string sToken, string sTimeStamp, string sNonce, string sMsgEncrypt, string sSigture)
+        {
+            string hash = "";
+            int ret = 0;
+            ret = GenarateSinature(sToken, sTimeStamp, sNonce, sMsgEncrypt, ref hash);
+            if (ret != 0)
+                return ret;
+            System.Console.WriteLine(hash);
+            if (hash == sSigture)
+                return 0;
+            return -1;
+        }
+
+        public class DictionarySort : IComparer
+        {
+            public int Compare(object oLeft, object oRight)
+            {
+                string sLeft = oLeft as string;
+                string sRight = oRight as string;
+                int iLeftLength = sLeft.Length;
+                int iRightLength = sRight.Length;
+                int index = 0;
+                while (index < iLeftLength && index < iRightLength)
+                {
+                    if (sLeft[index] < sRight[index])
+                        return -1;
+                    if (sLeft[index] > sRight[index])
+                        return 1;
+                    index++;
+                }
+                return iLeftLength - iRightLength;
+
+            }
+        }
+
+        public static int GenarateSinature(string sToken, string sTimeStamp, string sNonce, string sMsgEncrypt, ref string sMsgSignature)
+        {
+            ArrayList AL = new ArrayList {sToken, sTimeStamp, sNonce, sMsgEncrypt};
+            AL.Sort(new DictionarySort());
+            string raw = "";
+            for (int i = 0; i < AL.Count; ++i)
+            {
+                raw += AL[i];
+            }
+
+            string hash;
+            try
+            {
+                SHA1 sha = new SHA1CryptoServiceProvider();
+                var enc = new ASCIIEncoding();
+                byte[] dataToHash = enc.GetBytes(raw);
+                byte[] dataHashed = sha.ComputeHash(dataToHash);
+                hash = BitConverter.ToString(dataHashed).Replace("-", "");
+                hash = hash.ToLower();
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+            sMsgSignature = hash;
+            return 0;
+        }
+
 
         //        public class Contact
         //        {
