@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+//using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Caching;
-using Dapper;
-using FreshCommonUtility.Dapper;
+//using FreshCommonUtility.Dapper;
+using FreshCommonUtility.Web;
 using FreshCommonUtilityNetTest.Dapper;
 using FreshCommonUtilityNetTest.DataConvert;
 using FreshCommonUtilityNetTest.DeepCopy;
@@ -55,8 +55,12 @@ namespace FreshCommonUtilityNetTest
             stopwatch.Stop();
             Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
 
-            //EmitLearn.LearnInfo();
-            //ExpressionLear.LearnInfo();
+            EmitLearn.LearnInfo();
+            ExpressionLear.LearnInfo();
+
+            string result = WebHttpHelper.HttpsPost("https://www.ly.com", "key=123"); // key=4da4193e-384b-44d8-8a7f-2dd8b076d784
+            result.IsNotEqualTo(string.Empty);
+
             Console.ReadKey();
         }
 
