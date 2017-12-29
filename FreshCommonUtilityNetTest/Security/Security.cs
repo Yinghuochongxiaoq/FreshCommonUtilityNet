@@ -10,6 +10,7 @@
 #endregion
 using System;
 using FreshCommonUtility.Security;
+using FreshCommonUtilityNet.Security;
 
 namespace FreshCommonUtilityNetTest.Security
 {
@@ -26,6 +27,16 @@ namespace FreshCommonUtilityNetTest.Security
             var enCodeStr = AesHelper.AesEncrypt(testStr);
             var deCodeStr = AesHelper.AesDecrypt(enCodeStr);
             deCodeStr.IsEqualTo(testStr);
+        }
+
+        /// <summary>
+        /// 测试sha1加密方法
+        /// </summary>
+        public void Sha1EncryptTest()
+        {
+            var str = "FreshMan";
+            var securityStr = ShaHelper.Sha1(str);
+            securityStr.IsEqualTo("0A3EBF8576F1667B5893B42255BCDBD6C1D56339");
         }
         #endregion
 

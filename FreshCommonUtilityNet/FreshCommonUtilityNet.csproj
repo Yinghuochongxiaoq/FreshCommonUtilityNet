@@ -160,6 +160,7 @@
     <Compile Include="Security\IDCardValidatorHelper.cs" />
     <Compile Include="Security\RandomHelper.cs" />
     <Compile Include="Security\AesHelper.cs" />
+    <Compile Include="Security\ShaHelper.cs" />
     <Compile Include="SqlHelper\SqlConnectionHelper.cs" />
     <Compile Include="SqlHelper\SqlHelper.cs" />
     <Compile Include="Web\FilterHTMLHelper.cs" />
