@@ -3,7 +3,7 @@ using System.Collections.Generic;
 //using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
-//using Dapper;
+using System.Runtime.Caching;
 //using FreshCommonUtility.Dapper;
 using FreshCommonUtility.Web;
 using FreshCommonUtilityNetTest.Dapper;
@@ -12,6 +12,7 @@ using FreshCommonUtilityNetTest.DeepCopy;
 using FreshCommonUtilityNetTest.Enumber;
 using FreshCommonUtilityNetTest.ExcelHelper;
 using FreshCommonUtilityNetTest.ExpandMath;
+using FreshCommonUtilityNetTest.Model;
 using FreshCommonUtilityNetTest.Security;
 using FreshCommonUtilityNetTest.Zip;
 
@@ -33,9 +34,9 @@ namespace FreshCommonUtilityNetTest
                 typeof(ExcelHelperTests),
                 typeof(SecurityTest),
                 typeof(ZipHelperTests),
-                typeof(DapperSqlServerTest),
-                typeof(DapperMySqlTest),
-                typeof(DapperSqliteTest),
+                //typeof(DapperSqlServerTest),
+                //typeof(DapperMySqlTest),
+                //typeof(DapperSqliteTest),
                 typeof(BigIntTest)
             };
 
