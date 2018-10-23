@@ -50,16 +50,16 @@ namespace FreshCommonUtility.Dapper
             {
                 if (i > 0)
                     sb.Append(" and ");
-                sb.AppendFormat("{0} = @{1}", GetColumnName(idProps[i]), idProps[i].Name);
+                sb.AppendFormat("{0} = {1}{2}", GetColumnName(idProps[i]),_preSqlParamer, idProps[i].Name);
             }
 
             var dynParms = new DynamicParameters();
             if (idProps.Count == 1)
-                dynParms.Add("@" + idProps.First().Name, id);
+                dynParms.Add(_preSqlParamer + idProps.First().Name, id);
             else
             {
                 foreach (var prop in idProps)
-                    dynParms.Add("@" + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
+                    dynParms.Add(_preSqlParamer + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
             }
 
             if (Debugger.IsAttached)
@@ -264,7 +264,7 @@ namespace FreshCommonUtility.Dapper
             }
 
             var name = GetTableName(entityToInsert);
-            var sb = new StringBuilder();
+            var sb = new StringBuilder(_sqlBegin);
             sb.AppendFormat("insert into {0}", name);
             sb.Append(" (");
             BuildInsertParameters<TEntity>(sb);
@@ -296,6 +296,12 @@ namespace FreshCommonUtility.Dapper
             {
                 keyHasPredefinedValue = true;
             }
+
+            if (!sb.ToString().EndsWith(";"))
+            {
+                sb.Append(";");
+            }
+            sb.Append(_sqlEnd);
 
             if (Debugger.IsAttached)
                 Trace.WriteLine(String.Format("Insert: {0}", sb));
@@ -413,16 +419,16 @@ namespace FreshCommonUtility.Dapper
             {
                 if (i > 0)
                     sb.Append(" and ");
-                sb.AppendFormat("{0} = @{1}", GetColumnName(idProps[i]), idProps[i].Name);
+                sb.AppendFormat("{0} = {1}{2}", GetColumnName(idProps[i]), _preSqlParamer, idProps[i].Name);
             }
 
             var dynParms = new DynamicParameters();
             if (idProps.Count == 1)
-                dynParms.Add("@" + idProps.First().Name, id);
+                dynParms.Add(_preSqlParamer + idProps.First().Name, id);
             else
             {
                 foreach (var prop in idProps)
-                    dynParms.Add("@" + prop.Name, prop.GetValue(id));
+                    dynParms.Add(_preSqlParamer + prop.Name, prop.GetValue(id));
             }
 
             if (Debugger.IsAttached)

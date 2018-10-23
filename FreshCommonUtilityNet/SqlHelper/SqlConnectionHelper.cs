@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using FreshCommonUtility.Configure;
 using FreshCommonUtility.Dapper;
 using MySql.Data.MySqlClient;
+using Oracle.ManagedDataAccess.Client;
 
 // ReSharper disable once CheckNamespace
 namespace FreshCommonUtility.SqlHelper
@@ -51,6 +52,10 @@ namespace FreshCommonUtility.SqlHelper
         /// <summary>
         /// <para>Get open connection</para>
         /// <para>if you want to link mysql db,please add SslMode=None; in you link string.</para>
+        /// <para>MySQL link string eg:Server=127.0.0.1;Port=3306;User Id=test;Password=test;Database=testDb;SslMode=None</para>
+        /// <para>Oracle link string eg:Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=test)));Persist Security Info=True;User ID=test;Password=test;</para>
+        /// <para>SQLServer link string eg:Data Source = (localdb)\MSSQLLocalDB;Initial Catalog=DapperSimpleCrudTestDb;Integrated Security=True;MultipleActiveResultSets=true;</para>
+        /// <para>SQLite link string eg:Data Source=MyDatabase.sqlite;Version=3;</para>
         /// </summary>
         /// <param name="connectionString">DIV you connection string</param>
         /// <returns>IDbConection object</returns>
@@ -77,6 +82,11 @@ namespace FreshCommonUtility.SqlHelper
             {
                 connection = new SQLiteConnection(ConnectionString);
                 SimpleCRUD.SetDialect(SimpleCRUD.Dialect.SQLite);
+            }
+            else if (dbtype == SimpleCRUD.Dialect.Oracle)
+            {
+                connection = new OracleConnection(ConnectionString);
+                SimpleCRUD.SetDialect(SimpleCRUD.Dialect.Oracle);
             }
             else
             {
