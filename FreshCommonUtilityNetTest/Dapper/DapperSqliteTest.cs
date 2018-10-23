@@ -72,7 +72,6 @@ namespace FreshCommonUtilityNetTest.Dapper
             stopwatch.Stop();
             Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
             Console.Write("SQLite testing complete.");
-            Console.ReadKey();
         }
 
         public void SqliteDapperTest()

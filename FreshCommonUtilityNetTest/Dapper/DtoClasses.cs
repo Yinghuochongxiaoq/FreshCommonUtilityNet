@@ -112,7 +112,7 @@ namespace FreshCommonUtilityNetTest.Dapper
         [Column("colstringstrangeword")]
         public string StrangeWord { get; set; }
         [Column("KeywordedProperty")]
-        public string Select { get; set; }
+        public string Selected { get; set; }
         [Editable(false)]
         public string ExtraProperty { get; set; }
     }

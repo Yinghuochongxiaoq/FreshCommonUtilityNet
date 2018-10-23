@@ -30,6 +30,21 @@ namespace FreshCommonUtility.Dapper
 
         #region [2 Partially variable]
         /// <summary>
+        /// Excuse begin
+        /// </summary>
+        private static string _sqlBegin = "";
+
+        /// <summary>
+        /// Excuse end
+        /// </summary>
+        private static string _sqlEnd = "";
+
+        /// <summary>
+        /// pre SQL paramer
+        /// </summary>
+        private static string _preSqlParamer;
+
+        /// <summary>
         /// Default use SQLServer
         /// </summary>
         private static Dialect _dialect = Dialect.SQLServer;
@@ -84,6 +99,15 @@ namespace FreshCommonUtility.Dapper
         {
             return _dialect;
         }
+
+        /// <summary>
+        /// Get _preSqlParamer
+        /// </summary>
+        /// <returns></returns>
+        public static string GetPreSqlParamer()
+        {
+            return _preSqlParamer;
+        }
         #endregion
 
         #region [4 GetDialectString]
@@ -112,6 +136,7 @@ namespace FreshCommonUtility.Dapper
                 //    _getIdentitySql = "SELECT LASTVAL() AS id";
                 //    _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
                 //_dealMoreOtherPart = null;
+                //_preSqlParamer = "@";
                 //    break;
                 case Dialect.SQLite:
                     _dialect = Dialect.SQLite;
@@ -119,6 +144,7 @@ namespace FreshCommonUtility.Dapper
                     _getIdentitySql = "SELECT LAST_INSERT_ROWID() AS id";
                     _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
                     _dealMoreOtherPart = new SqlitePart();
+                    _preSqlParamer = "@";
                     break;
                 case Dialect.MySQL:
                     _dialect = Dialect.MySQL;
@@ -126,6 +152,17 @@ namespace FreshCommonUtility.Dapper
                     _getIdentitySql = "SELECT LAST_INSERT_ID() AS id";
                     _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {Offset},{RowsPerPage}";
                     _dealMoreOtherPart = new MySqlPart();
+                    _preSqlParamer = "@";
+                    break;
+                case Dialect.Oracle:
+                    _dialect = Dialect.Oracle;
+                    _encapsulation = "{0}";
+                    _getIdentitySql = "";
+                    _getPagedListSql = " select * from (Select ROWNUM fro, {SelectColumns} from {TableName} {WhereClause} and rownum<= ({PageNumber} * {RowsPerPage}) Order By {OrderBy})where fro>=(({PageNumber}-1) * {RowsPerPage} + 1)";
+                    _dealMoreOtherPart = new OraclePart();
+                    _preSqlParamer = ":";
+                    _sqlBegin = " begin ";
+                    _sqlEnd = " end; ";
                     break;
                 default:
                     _dialect = Dialect.SQLServer;
@@ -133,6 +170,7 @@ namespace FreshCommonUtility.Dapper
                     _getIdentitySql = "SELECT CAST(SCOPE_IDENTITY()  AS BIGINT) AS [id]";
                     _getPagedListSql = "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {OrderBy}) AS PagedNumber, {SelectColumns} FROM {TableName} {WhereClause}) AS u WHERE PagedNUMBER BETWEEN (({PageNumber}-1) * {RowsPerPage} + 1) AND ({PageNumber} * {RowsPerPage})";
                     _dealMoreOtherPart = new SqlServerPart();
+                    _preSqlParamer = "@";
                     break;
             }
         }
@@ -194,17 +232,17 @@ namespace FreshCommonUtility.Dapper
             {
                 if (i > 0)
                     sb.Append(" and ");
-                sb.AppendFormat("{0} = @{1}", GetColumnName(idProps[i]), idProps[i].Name);
+                sb.AppendFormat("{0} = {1}{2}", GetColumnName(idProps[i]), _preSqlParamer, idProps[i].Name);
             }
 
             var dynParms = new DynamicParameters();
             if (idProps.Count == 1)
-                dynParms.Add("@" + idProps.First().Name, id);
+                dynParms.Add(_preSqlParamer + idProps.First().Name, id);
             else
             {
                 foreach (var prop in idProps)
                     // ReSharper disable once PossibleNullReferenceException
-                    dynParms.Add("@" + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
+                    dynParms.Add(_preSqlParamer + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
             }
 
             if (Debugger.IsAttached)
@@ -351,7 +389,7 @@ namespace FreshCommonUtility.Dapper
             query = query.Replace("{PageNumber}", pageNumber.ToString());
             query = query.Replace("{RowsPerPage}", rowsPerPage.ToString());
             query = query.Replace("{OrderBy}", orderby);
-            query = query.Replace("{WhereClause}", conditions);
+            query = query.Replace("{WhereClause}", string.IsNullOrEmpty(conditions) ? " where 1=1 " : conditions);
             query = query.Replace("{Offset}", ((pageNumber - 1) * rowsPerPage).ToString());
 
             if (Debugger.IsAttached)
@@ -412,7 +450,7 @@ namespace FreshCommonUtility.Dapper
             }
 
             var name = GetTableName(entityToInsert);
-            var sb = new StringBuilder();
+            var sb = new StringBuilder(_sqlBegin);
             sb.AppendFormat("insert into {0}", name);
             sb.Append(" (");
             BuildInsertParameters<TEntity>(sb);
@@ -448,14 +486,23 @@ namespace FreshCommonUtility.Dapper
 
             if (Debugger.IsAttached)
                 Trace.WriteLine(string.Format("Insert: {0}", sb));
+            if (!sb.ToString().EndsWith(";"))
+            {
+                sb.Append(";");
+            }
+            sb.Append(_sqlEnd);
 
             var r = connection.Query(sb.ToString(), entityToInsert, transaction, true, commandTimeout);
 
             if (keytype == typeof(Guid) || keyHasPredefinedValue)
             {
-                return (TKey)idProps.First().GetValue(entityToInsert, null);
+                return (TKey)idProps.FirstOrDefault().GetValue(entityToInsert, null);
             }
-            return (TKey)r.First().id;
+            if (r.FirstOrDefault() == null)
+            {
+                return default(TKey);
+            }
+            return (TKey)r.FirstOrDefault()?.id;
         }
         #endregion
 
@@ -566,17 +613,17 @@ namespace FreshCommonUtility.Dapper
             {
                 if (i > 0)
                     sb.Append(" and ");
-                sb.AppendFormat("{0} = @{1}", GetColumnName(idProps[i]), idProps[i].Name);
+                sb.AppendFormat("{0} = {1}{2}", GetColumnName(idProps[i]), _preSqlParamer, idProps[i].Name);
             }
 
             var dynParms = new DynamicParameters();
             if (idProps.Count == 1)
-                dynParms.Add("@" + idProps.First().Name, id);
+                dynParms.Add(_preSqlParamer + idProps.First().Name, id);
             else
             {
                 foreach (var prop in idProps)
                     // ReSharper disable once PossibleNullReferenceException
-                    dynParms.Add("@" + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
+                    dynParms.Add(_preSqlParamer + prop.Name, id.GetType().GetProperty(prop.Name).GetValue(id, null));
             }
 
             if (Debugger.IsAttached)
@@ -855,7 +902,7 @@ namespace FreshCommonUtility.Dapper
             {
                 var property = nonIdProps[i];
 
-                sb.AppendFormat("{0} = @{1}", GetColumnName(property), property.Name);
+                sb.AppendFormat("{0} = {1}{2}", GetColumnName(property), _preSqlParamer, property.Name);
                 if (i < nonIdProps.Length - 1)
                     sb.AppendFormat(", ");
             }
@@ -923,8 +970,9 @@ namespace FreshCommonUtility.Dapper
                     }
                 }
                 sb.AppendFormat(
-                    useIsNull ? "{0} is null" : "{0} = @{1}",
+                    useIsNull ? "{0} is null" : "{0} = {1}{2}",
                     GetColumnName(propertyToUse),
+                    _preSqlParamer,
                     propertyInfos.ElementAt(i).Name);
 
                 if (i < propertyInfos.Count() - 1)
@@ -950,7 +998,12 @@ namespace FreshCommonUtility.Dapper
             for (var i = 0; i < props.Count(); i++)
             {
                 var property = props.ElementAt(i);
-                if (property.PropertyType != typeof(Guid)
+                if ((
+                    _dialect == Dialect.MySQL
+                    || _dialect == Dialect.SQLite
+                    || _dialect == Dialect.SQLServer
+                    )
+                      && property.PropertyType != typeof(Guid)
                       && property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(KeyAttribute).Name)
                       && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name))
                     continue;
@@ -958,9 +1011,14 @@ namespace FreshCommonUtility.Dapper
                 if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(NotMappedAttribute).Name)) continue;
                 if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(ReadOnlyAttribute).Name && IsReadOnly(property))) continue;
 
-                if (property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name) && property.PropertyType != typeof(Guid)) continue;
+                if ((
+                    _dialect == Dialect.MySQL
+                    || _dialect == Dialect.SQLite
+                    || _dialect == Dialect.SQLServer
+                    )
+                      && property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name) && property.PropertyType != typeof(Guid)) continue;
 
-                sb.AppendFormat("@{0}", property.Name);
+                sb.AppendFormat("{0}{1}", _preSqlParamer, property.Name);
                 if (i < props.Count() - 1)
                     sb.Append(", ");
             }
@@ -986,7 +1044,12 @@ namespace FreshCommonUtility.Dapper
             for (var i = 0; i < props.Count(); i++)
             {
                 var property = props.ElementAt(i);
-                if (property.PropertyType != typeof(Guid)
+                if ((
+                    _dialect == Dialect.MySQL
+                    || _dialect == Dialect.SQLite
+                    || _dialect == Dialect.SQLServer
+                    )
+                      && property.PropertyType != typeof(Guid)
                       && property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(KeyAttribute).Name)
                       && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name))
                     continue;
@@ -994,7 +1057,12 @@ namespace FreshCommonUtility.Dapper
                 if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(NotMappedAttribute).Name)) continue;
 
                 if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(ReadOnlyAttribute).Name && IsReadOnly(property))) continue;
-                if (property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name) && property.PropertyType != typeof(Guid)) continue;
+                if ((
+                    _dialect == Dialect.MySQL
+                    || _dialect == Dialect.SQLite
+                    || _dialect == Dialect.SQLServer
+                    )
+                      && property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name) && property.PropertyType != typeof(Guid)) continue;
 
                 sb.Append(GetColumnName(property));
                 if (i < props.Count() - 1)
@@ -1196,7 +1264,7 @@ namespace FreshCommonUtility.Dapper
             ///// <summary>
             ///// PostgreSQL
             ///// </summary>
-            //////PostgreSQL = 1,
+            //PostgreSQL = 1,
 
             /// <summary>
             /// MySQL
@@ -1209,6 +1277,11 @@ namespace FreshCommonUtility.Dapper
             /// </summary>
             // ReSharper disable once InconsistentNaming
             SQLite = 3,
+
+            /// <summary>
+            /// Oracle
+            /// </summary>
+            Oracle = 4,
         }
         #endregion
 

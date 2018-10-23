@@ -50,6 +50,9 @@
       <HintPath>..\packages\MySql.Data.6.9.9\lib\net45\MySql.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Oracle.ManagedDataAccess, Version=4.122.18.3, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
+      <HintPath>..\packages\Oracle.ManagedDataAccess.18.3.0\lib\net40\Oracle.ManagedDataAccess.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -85,9 +88,11 @@
   <ItemGroup>
     <Compile Include="Assert.cs" />
     <Compile Include="Dapper\DapperMySqlTest.cs" />
+    <Compile Include="Dapper\DapperOracleTest.cs" />
     <Compile Include="Dapper\DapperSqliteTest.cs" />
     <Compile Include="Dapper\DapperSqlServerTest.cs" />
     <Compile Include="Dapper\DtoClasses.cs" />
+    <Compile Include="Dapper\SimpleCrudForOracleTest.cs" />
     <Compile Include="DataConvert\DataTypeConvertHelperTests.cs" />
     <Compile Include="DeepCopy\DeepCopyHelperTests.cs" />
     <Compile Include="Email\EmailHelperTest.cs" />
