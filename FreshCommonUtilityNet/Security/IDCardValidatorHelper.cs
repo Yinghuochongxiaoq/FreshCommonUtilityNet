@@ -3678,7 +3678,7 @@ namespace FreshCommonUtility.Security
         }
 
         /// <summary>
-        /// 16位身份证号码验证
+        /// 15位身份证号码验证
         /// </summary>
         private static bool CheckIdCard15(string idNumber)
         {
