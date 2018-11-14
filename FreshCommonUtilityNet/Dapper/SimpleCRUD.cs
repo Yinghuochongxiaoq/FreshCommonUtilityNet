@@ -174,6 +174,24 @@ namespace FreshCommonUtility.Dapper
                     break;
             }
         }
+
+        /// <summary>
+        ///  Set SqlBegin
+        /// </summary>
+        /// <param name="sqlbegin"></param>
+        public static void SetSqlBegin(string sqlbegin)
+        {
+            _sqlBegin = sqlbegin;
+        }
+
+        /// <summary>
+        ///  Set SqlEnd
+        /// </summary>
+        /// <param name="sqlend"></param>
+        public static void SetSqlEnd(string sqlend)
+        {
+            _sqlEnd = sqlend;
+        }
         #endregion
 
         #region [6 Set youself Tablename resolver]
@@ -1347,6 +1365,190 @@ namespace FreshCommonUtility.Dapper
                 }
                 return columnName;
             }
+        }
+        #endregion
+
+        #region [26 Get insert sql str]
+
+        /// <summary>
+        /// Get insert sql str
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="connection"></param>
+        /// <param name="entityToInsert"></param>
+        /// <param name="transaction"></param>
+        /// <param name="commandTimeout"></param>
+        /// <returns></returns>
+        public static string GetInsertStr<TEntity>(this IDbConnection connection, TEntity entityToInsert)
+        {
+            return GetInsertStr<int?, TEntity>(connection, entityToInsert);
+        }
+
+        /// <summary>
+        /// <para>Inserts a row into the database, using ONLY the properties defined by TEntity</para>
+        /// <para>By default inserts into the table matching the class name</para>
+        /// <para>-Table name can be overridden by adding an attribute on your class [Table("YourTableName")]</para>
+        /// <para>Insert filters out Id column and any columns with the [Key] attribute</para>
+        /// <para>Properties marked with attribute [Editable(false)] and complex types are ignored</para>
+        /// <para>Supports transaction and command timeout</para>
+        /// <para>Returns the ID (primary key) of the newly inserted record if it is identity using the defined type, otherwise null</para>
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="entityToInsert"></param>
+        /// <param name="transaction"></param>
+        /// <param name="commandTimeout"></param>
+        /// <returns>The ID (primary key) of the newly inserted record if it is identity using the defined type, otherwise null</returns>
+        public static string GetInsertStr<TKey, TEntity>(this IDbConnection connection, TEntity entityToInsert)
+        {
+            var idProps = GetIdProperties(entityToInsert).ToList();
+
+            if (!idProps.Any())
+                throw new ArgumentException("Insert<T> only supports an entity with a [Key] or Id property");
+
+            var baseType = typeof(TKey);
+            var underlyingType = Nullable.GetUnderlyingType(baseType);
+            var keytype = underlyingType ?? baseType;
+            if (keytype != typeof(int) && keytype != typeof(uint) && keytype != typeof(long) && keytype != typeof(ulong) && keytype != typeof(short) && keytype != typeof(ushort) && keytype != typeof(Guid) && keytype != typeof(string))
+            {
+                throw new Exception("Invalid return type");
+            }
+
+            var name = GetTableName(entityToInsert);
+            var sb = new StringBuilder(_sqlBegin);
+            sb.AppendFormat("insert into {0}", name);
+            sb.Append(" (");
+            BuildInsertParameters<TEntity>(sb);
+            sb.Append(") ");
+            sb.Append("values");
+            sb.Append(" (");
+            BuildInsertValues(entityToInsert, sb);
+            sb.Append(")");
+
+            if (keytype == typeof(Guid))
+            {
+                var guidvalue = (Guid)idProps.First().GetValue(entityToInsert, null);
+                if (guidvalue == Guid.Empty)
+                {
+                    var newguid = SequentialGuid();
+                    idProps.First().SetValue(entityToInsert, newguid, null);
+                }
+                sb.Append(";select '" + idProps.First().GetValue(entityToInsert, null) + "' as id");
+            }
+
+            if ((keytype == typeof(int) || keytype == typeof(long)) && Convert.ToInt64(idProps.First().GetValue(entityToInsert, null)) == 0)
+            {
+                sb.Append(";" + _getIdentitySql);
+            }
+            if (Debugger.IsAttached)
+                Trace.WriteLine(string.Format("Insert: {0}", sb));
+            if (!sb.ToString().EndsWith(";"))
+            {
+                sb.Append(";");
+            }
+            sb.Append(_sqlEnd);
+
+            return sb.ToString();
+        }
+
+        /// <summary>  
+        /// 根据sql语句和实体对象自动生成参数化查询SqlParameter列表  
+        /// </summary>  
+        /// <typeparam name="T">实体对象类型</typeparam>
+        /// <param name="obj">实体对象</param>
+        /// <param name="sb"></param>  
+        /// <returns>SqlParameter列表</returns>  
+        private static void BuildInsertValues<T>(T obj, StringBuilder sb)
+        {
+            var props = GetScaffoldableProperties<T>().ToArray();
+
+            for (var i = 0; i < props.Count(); i++)
+            {
+                var property = props.ElementAt(i);
+                if ((
+                    _dialect == Dialect.MySQL
+                    || _dialect == Dialect.SQLite
+                    || _dialect == Dialect.SQLServer
+                    )
+                      && property.PropertyType != typeof(Guid)
+                      && property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(KeyAttribute).Name)
+                      && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name))
+                    continue;
+                if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(IgnoreInsertAttribute).Name)) continue;
+                if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(NotMappedAttribute).Name)) continue;
+
+                if (property.GetCustomAttributes(true).Any(attr => attr.GetType().Name == typeof(ReadOnlyAttribute).Name && IsReadOnly(property))) continue;
+                if ((
+                    _dialect == Dialect.MySQL
+                    || _dialect == Dialect.SQLite
+                    || _dialect == Dialect.SQLServer
+                    )
+                      && property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) && property.GetCustomAttributes(true).All(attr => attr.GetType().Name != typeof(RequiredAttribute).Name) && property.PropertyType != typeof(Guid)) continue;
+                if (!property.CanWrite) continue;
+                object paramsValue = null;
+                if (property.PropertyType.Name == "String" || property.PropertyType.IsValueType)
+                {
+                    //傻逼的时间类型特殊处理
+                    if (property.PropertyType == typeof(DateTime))
+                    {
+                        if (((DateTime)props[i].GetValue(obj, null)) < new DateTime(1900, 1, 1))
+                        {
+                            paramsValue = DBNull.Value;
+                        }
+                        else
+                        {
+                            paramsValue = props[i].GetValue(obj, null) ?? DBNull.Value;
+                        }
+                    }
+                    else
+                    {
+                        paramsValue = props[i].GetValue(obj, null) ?? DBNull.Value;
+                    }
+                }
+                else
+                {
+                    var entityValue = props[i].GetValue(obj, null);
+                    if (entityValue != null)
+                    {
+                        IEnumerable<PropertyInfo> referenceProps = property.PropertyType.GetProperties();
+                        var referenceKey =
+                            referenceProps.FirstOrDefault(
+                                f => f.GetCustomAttributes(typeof(KeyAttribute), true).Length > 0);
+                        if (referenceKey != null)
+                        {
+                            var tempParamsValue = referenceKey.GetValue(entityValue, null);
+                            if (referenceKey.PropertyType.Name == typeof(string).Name ||
+                                referenceKey.PropertyType.Name == typeof(Guid).Name)
+                            {
+                                paramsValue = tempParamsValue ?? DBNull.Value;
+                            }
+                            else
+                            {
+                                paramsValue = Convert.ToInt64(tempParamsValue) < 1 ? DBNull.Value : tempParamsValue;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        paramsValue = DBNull.Value;
+                    }
+                }
+                if (paramsValue == DBNull.Value)
+                {
+                    sb.Append("null");
+                }
+                else if (paramsValue.ToString().Contains("to_timestamp("))
+                {
+                    sb.Append(paramsValue);
+                }
+                else
+                {
+                    sb.Append($"'{paramsValue}'");
+                }
+                if (i < props.Count() - 1)
+                    sb.Append(", ");
+            }
+            if (sb.ToString().EndsWith(", "))
+                sb.Remove(sb.Length - 2, 2);
         }
         #endregion
     }

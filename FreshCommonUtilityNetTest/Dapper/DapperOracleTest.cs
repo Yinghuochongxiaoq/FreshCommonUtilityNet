@@ -13,14 +13,24 @@ using FreshCommonUtility.Dapper;
 using FreshCommonUtility.SqlHelper;
 using Oracle.ManagedDataAccess.Client;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 namespace FreshCommonUtilityNetTest.Dapper
 {
     public class DapperOracleTest
     {
+        /**生成测试数据*/
+
+        //select rownum as id,
+        //       to_char(sysdate + rownum/24/3600, 'yyyy-mm-dd hh24:mi:ss') as inc_datetime,
+        //       trunc(dbms_random.value(0, 100)) as random_id,
+        //       dbms_random.string ('x', 20) random_string
+        //        from dual
+        //        connect by level <= 10;
         string connectionString = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=183.230.101.143)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=tysh)));Persist Security Info=True;User ID=xns;Password=xns;";
 
         /// <summary>
@@ -112,15 +122,6 @@ namespace FreshCommonUtilityNetTest.Dapper
         {
             SetupOracle();
             RunTestOracle();
-        }
-
-        static OracleConnection OpenConn()
-        {
-            OracleConnection conn = new OracleConnection();
-            string connString = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=183.230.101.143)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=tysh)));Persist Security Info=True;User ID=xns;Password=xns;";
-            conn.ConnectionString = connString;
-            conn.Open();
-            return conn;
         }
 
         static void CloseConn(OracleConnection conn)
