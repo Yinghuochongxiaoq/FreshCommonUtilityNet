@@ -35,6 +35,9 @@ namespace FreshCommonUtilityNet.Log
         {
             _pathInfoLog = Path.Combine(path, "Log\\Info");
             _pathErrorLog = Path.Combine(path, "Log\\Error");
+            var root = AppDomain.CurrentDomain.BaseDirectory;
+            _pathInfoLog = root + _pathInfoLog;
+            _pathErrorLog = root + _pathErrorLog;
             if (fileSize != null) _fileSize = fileSize.Value;
             if (!Directory.Exists(_pathInfoLog)) Directory.CreateDirectory(_pathInfoLog);
             if (!Directory.Exists(_pathErrorLog)) Directory.CreateDirectory(_pathErrorLog);
