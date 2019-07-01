@@ -160,8 +160,11 @@ namespace FreshCommonUtility.Web
         /// <param name="url">URL</param>
         /// <param name="postData">post data</param>
         /// <param name="cookies">cookies</param>
+        /// <param name="encoding">encoding,default UTF-8</param>
+        /// <param name="millisecond">request timeout</param>
+        /// <param name="contentType">request contenttype,default application/x-www-form-urlencoded,can set application/json do post json data tu url.</param>
         /// <returns></returns>
-        public static string HttpsPost(string url, string postData, Dictionary<string, System.Net.Cookie> cookies = null)
+        public static string HttpsPost(string url, string postData, Dictionary<string, System.Net.Cookie> cookies = null, Encoding encoding = null,int millisecond=3000,string contentType= "application/x-www-form-urlencoded")
         {
             HttpWebRequest request;
             if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
@@ -183,11 +186,12 @@ namespace FreshCommonUtility.Web
             }
 
             request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentType = contentType;
             request.Referer = null;
             request.AllowAutoRedirect = true;
             request.UserAgent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2; .NET CLR 1.1.4322; .NET CLR 2.0.50727)";
             request.Accept = "*/*";
+            request.Timeout = millisecond < 0 ? 3000 : millisecond;
             if (cookies != null && cookies.Any())
             {
                 CookieContainer cc = new CookieContainer();
@@ -198,7 +202,7 @@ namespace FreshCommonUtility.Web
                 request.CookieContainer = cc;
             }
 
-            byte[] data = Encoding.UTF8.GetBytes(postData);
+            byte[] data = encoding == null ? Encoding.UTF8.GetBytes(postData) : encoding.GetBytes(postData);
             Stream newStream = request.GetRequestStream();
             newStream.Write(data, 0, data.Length);
             newStream.Close();
